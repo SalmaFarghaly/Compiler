@@ -7,7 +7,6 @@
     extern char yyval;
 %}
 
-%
 alpha [a-zA-Z]
 digit [0-9]
 str \"[^"\n]*\"
@@ -43,16 +42,19 @@ character \'[^'\n]\'
 ")"     return CP;
 "{"     return OB;
 "}"     return CB;
+"const"	return CONST;
+"if"	return IF;
+"then"	return THEN;
 
 {alpha}({alpha}|{digit})* {return IDENTIFIER;}
 {digit}+                  {return NUM;}
-[0-9]+\.[0-9]+            {return REAL;}
+[0-9]+\.[0-9]+            {return DECIMAL;}
 {str}                     {return EXPSTR;}
 {character}               {return EXPCHAR;}
 
 
 [ \t] ;
-[\n] ;
+[\n] {printf("found newline\n");}
 . ;
 
 %%

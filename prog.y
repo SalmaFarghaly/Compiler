@@ -1,10 +1,12 @@
 
   
 %{
+	void yyerror (char const *s);
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
 	int yylex();
+	int typeno;
 %}
 %union {
   struct info{ 
@@ -18,15 +20,16 @@
     }ourinfo;
 }  
 
+%start line
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
-%token  <ourinfo> REAL 
+%token  <ourinfo> DECIMAL 
 %token  <ourinfo> EXPCHAR
 %token  <ourinfo> EXPSTR 
 %token  CHAR INT FLOAT DOUBLE STRING VOID RETURN 
 %token  EQ LE GE AND OR XOR ASSIGN L G NEQ
 %token  ADD SUB MUL DIV INC DEC REM
-%token SEMICOLON COMMA
+%token SEMICOLON COMMA IF THEN CONST
 %token  OP CP OB CB
 
 
@@ -35,18 +38,15 @@
 
 
 
+line
+	: argumentlist SEMICOLON
+	| argumentlist SEMICOLON line
+	| expr SEMICOLON
+	;
 
-number
-	: NUM	{$<ourinfo>$.type = 2 ;  strcpy($<ourinfo>$.value,$<ourinfo>1.value); }
-	| REAL	{$<ourinfo>$.type = 3 ;  strcpy($<ourinfo>$.value,$<ourinfo>1.value); }
-	;
-	
-string
-	:EXPSTR  {$<ourinfo>$.type = 4 ;  strcpy($<ourinfo>$.value,$<ourinfo>1.value); }
-	|EXPCHAR {$<ourinfo>$.type = 1 ;  strcpy($<ourinfo>$.value,$<ourinfo>1.value); }
-	;
+
 type 
-	: INT   {  $<ourinfo>1.type = 2 ; $<ourinfo>$=$<ourinfo>1; typeno=2}
+	: INT   {  $<ourinfo>1.type = 2 ; $<ourinfo>$=$<ourinfo>1; typeno=2;printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);}
 	| CHAR  {  $<ourinfo>1.type = 1 ; $<ourinfo>$=$<ourinfo>1; typeno=1}
 	| FLOAT {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3}
 	| VOID  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=0}
@@ -54,41 +54,89 @@ type
 	;
 
 variable
-	: IDENTIFIER {  $<ourinfo>$.name=declarationcheck($<ourinfo>$.name,typeno); $<ourinfo>$.type=typeno;  printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {  $<ourinfo>$.name=$<ourinfo>$.name; $<ourinfo>$.type=typeno;  printf("%d\n",$<ourinfo>$.type); }
 	;
+
 argument 
 	: type variable
-	;
-argumentlist
-	: argument
-	| argument COMMA argumentlist
-	| {;}
+	| variable
 	;
 
+
+argumentlist
+	: multiplearguments 
+	| CONST argument ASSIGN number 
+	| CONST argument ASSIGN string 
+	| argument ASSIGN expr //int a=5+3;
+	| multiplearguments ASSIGN string  
+	| multiplearguments ASSIGN number	
+	;
+
+multiplearguments
+	: argument
+	|  argument multipledeclarations
+	;
+
+multipledeclarations
+	: COMMA variable
+	| COMMA variable multipledeclarations
+	;
+	
+number
+	: NUM	
+	| DECIMAL	
+	;
+	
+string
+	: EXPSTR 
+	| EXPCHAR 
+	;
 
 operation
-	: ADD {$<ourinfo>$.value='+';}
-	| SUB {$<ourinfo>$.value='-';}
-	| MUL {$<ourinfo>$.value='*';}
-	| DIV {$<ourinfo>$.value='/';}
+	: ADD 
+	| SUB 
+	| MUL 
+	| DIV 
 	;
 
+expr
+    : number operation number
+	;
+
+term
+	: term MUL factor 
+	| term DIV factor
+	| factor
+	;
+
+factor
+	: number
+	| IDENTIFIER //a= a+3
+	| OP expr CP
+	;
 
 
 %%
 
 
-extern FILE *yyin;
+
 
 void yyerror (char const *s) {
 	fprintf (stderr, "%s\n", s);
 }
 
-
+extern FILE *yyin;
 
 int main()
 {
+	yyin=fopen("input.c","r");
+	
+	
+	
 	yyparse();
+	
+	fclose(yyin);
+	
 	return 0;
 }
 
