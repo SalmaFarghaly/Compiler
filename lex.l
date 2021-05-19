@@ -6,6 +6,8 @@
 	#include<string.h>
     extern char yyval;
 %}
+
+%
 alpha [a-zA-Z]
 digit [0-9]
 str \"[^"\n]*\"
