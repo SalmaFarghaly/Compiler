@@ -39,9 +39,9 @@
 
 
 line
-	: argumentlist SEMICOLON
-	| argumentlist SEMICOLON line
-	| expr SEMICOLON
+	: statements SEMICOLON
+	| statements SEMICOLON line
+  //| expr SEMICOLON
 	;
 
 
@@ -63,14 +63,14 @@ argument
 	;
 
 
-argumentlist
-	: multiplearguments 
-	| CONST argument ASSIGN number 
-	| CONST argument ASSIGN string 
-	| argument ASSIGN expr //int a=5+3;
-	| multiplearguments ASSIGN string  
-	| multiplearguments ASSIGN number	
-	;
+statements // 7assa esmaha kda a7la
+		: multiplearguments 
+		| CONST argument ASSIGN number 
+		| CONST argument ASSIGN string 
+		//| argument ASSIGN expr //int a=5+3;
+		| multiplearguments ASSIGN string  
+		| multiplearguments ASSIGN expr	
+		;
 
 multiplearguments
 	: argument
@@ -95,12 +95,11 @@ string
 operation
 	: ADD 
 	| SUB 
-	| MUL 
-	| DIV 
 	;
 
 expr
-    : number operation number
+    : expr operation factor
+	| term
 	;
 
 term
@@ -111,7 +110,7 @@ term
 
 factor
 	: number
-	| IDENTIFIER //a= a+3
+	| variable //a= a+3
 	| OP expr CP
 	;
 
