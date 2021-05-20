@@ -41,7 +41,6 @@
 line
 	: statements SEMICOLON
 	| statements SEMICOLON line
-  //| expr SEMICOLON
 	;
 
 
@@ -63,13 +62,14 @@ argument
 	;
 
 
-statements // 7assa esmaha kda a7la
+statements 
 		: multiplearguments 
 		| CONST argument ASSIGN number 
 		| CONST argument ASSIGN string 
-		//| argument ASSIGN expr //int a=5+3;
 		| multiplearguments ASSIGN string  
 		| multiplearguments ASSIGN expr	
+		| variable INC
+		| variable DEC
 		;
 
 multiplearguments
@@ -97,7 +97,7 @@ operation
 	| SUB 
 	;
 
-expr
+expr 
     : expr operation factor
 	| term
 	;
@@ -129,8 +129,6 @@ extern FILE *yyin;
 int main()
 {
 	yyin=fopen("input.c","r");
-	
-	
 	
 	yyparse();
 	
