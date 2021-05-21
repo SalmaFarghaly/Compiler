@@ -26,11 +26,12 @@
 %token  <ourinfo> DECIMAL 
 %token  <ourinfo> EXPCHAR
 %token  <ourinfo> EXPSTR 
-%token  CHAR INT FLOAT DOUBLE STRING VOID RETURN 
+%token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL
 %token  EQ LE GE AND OR XOR ASSIGN L G NEQ
 %token  ADD SUB MUL DIV INC DEC REM
 %token SEMICOLON COMMA IF THEN CONST
 %token  OP CP OB CB
+%token FALSE TRUE
 
 
 
@@ -49,7 +50,8 @@ type
 	| CHAR  {  $<ourinfo>1.type = 1 ; $<ourinfo>$=$<ourinfo>1; typeno=1}
 	| FLOAT {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3}
 	| VOID  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=0}
-	|STRING {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=4} 
+	| STRING {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=4} 
+	| BOOL {  $<ourinfo>1.type = 5 ; $<ourinfo>$=$<ourinfo>1; typeno=5} 
 	;
 
 variable
@@ -70,6 +72,7 @@ statements
 		| multiplearguments ASSIGN expr	
 		| variable INC
 		| variable DEC
+		| condition // shouldnot be here
 		;
 
 multiplearguments
@@ -81,7 +84,23 @@ multipledeclarations
 	: COMMA variable
 	| COMMA variable multipledeclarations
 	;
+
+comparsions
+	: EQ | GE | LE | L | G | NEQ;
+
+BOOLEANS
+	: TRUE
+	| FALSE
+
+condition
+	: expr comparsions expr
+	| IDENTIFIER EQ BOOLEANS
+	;
 	
+logicals
+	: AND
+	| OR
+	;
 number
 	: NUM	
 	| DECIMAL	
@@ -100,6 +119,8 @@ operation
 expr 
     : expr operation factor
 	| term
+
+
 	;
 
 term

@@ -51,32 +51,35 @@
      STRING = 267,
      VOID = 268,
      RETURN = 269,
-     EQ = 270,
-     LE = 271,
-     GE = 272,
-     AND = 273,
-     OR = 274,
-     XOR = 275,
-     ASSIGN = 276,
-     L = 277,
-     G = 278,
-     NEQ = 279,
-     ADD = 280,
-     SUB = 281,
-     MUL = 282,
-     DIV = 283,
-     INC = 284,
-     DEC = 285,
-     REM = 286,
-     SEMICOLON = 287,
-     COMMA = 288,
-     IF = 289,
-     THEN = 290,
-     CONST = 291,
-     OP = 292,
-     CP = 293,
-     OB = 294,
-     CB = 295
+     BOOL = 270,
+     EQ = 271,
+     LE = 272,
+     GE = 273,
+     AND = 274,
+     OR = 275,
+     XOR = 276,
+     ASSIGN = 277,
+     L = 278,
+     G = 279,
+     NEQ = 280,
+     ADD = 281,
+     SUB = 282,
+     MUL = 283,
+     DIV = 284,
+     INC = 285,
+     DEC = 286,
+     REM = 287,
+     SEMICOLON = 288,
+     COMMA = 289,
+     IF = 290,
+     THEN = 291,
+     CONST = 292,
+     OP = 293,
+     CP = 294,
+     OB = 295,
+     CB = 296,
+     FALSE = 297,
+     TRUE = 298
    };
 #endif
 
@@ -102,7 +105,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 106 "prog.tab.h"
+#line 109 "prog.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

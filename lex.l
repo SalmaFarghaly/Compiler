@@ -20,6 +20,8 @@ character \'[^'\n]\'
 ">="  return GE;
 "<="  return LE;
 "=="  return EQ;
+"false" return FALSE;
+"true" return TRUE;
 "<"   return L;
 ">"   return G;
 "!="  return NEQ;
@@ -36,6 +38,7 @@ character \'[^'\n]\'
 "void"      return VOID;
 "return"    return RETURN;
 "double"    return DOUBLE; 
+"bool"      return BOOL;
 ";"     return SEMICOLON;
 ","     return COMMA;
 "("     return OP;
