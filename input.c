@@ -1,3 +1,11 @@
+int fun(int a,int b){
+    int a,c=5+3;
+    return c;
+
+}
+int a;
+int b;
+int main(){
 int a,d=8+5;
 variable=7;
 a = a + 3+5+6+8;
@@ -20,3 +28,4 @@ b=a*h^6;
 c=a|z;
 c=a&y|v;
 c=a&y&f;
+}

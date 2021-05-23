@@ -20,7 +20,7 @@
     }ourinfo;
 }  
 
-%start line
+%start program
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
@@ -29,7 +29,7 @@
 %token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL
 %token  EQ LE GE AND OR L G NEQ
 %token  ASSIGN
-%token  SS
+%token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
 %token  XOR BitwiseAnd BitwiseOR
 %token SEMICOLON COMMA IF THEN CONST
@@ -40,11 +40,29 @@
 
 %%
 
-
+program
+	: function
+	| function program
+	;
 
 line
 	: statements SEMICOLON
 	| statements SEMICOLON line
+	;
+
+function
+	: type variable OP argListOpt CP OB line CB
+	| VOID variable OP argListOpt CP OB line CB
+	;
+
+argListOpt
+	: type variable
+	| type variable COMMA argListOpt
+	| 
+	;
+ReturnStmt
+	: RETURN expr 
+	| RETURN
 	;
 
 
@@ -66,6 +84,7 @@ variable
 	: IDENTIFIER {  $<ourinfo>$.name=$<ourinfo>$.name; $<ourinfo>$.type=typeno;  printf("%d\n",$<ourinfo>$.type); }
 	;
 
+
 argument 
 	: type variable
 	| variable
@@ -73,16 +92,17 @@ argument
 
 
 statements 
-		: common 
+		: commondeclarations 
 		| multiplearguments ASSIGN expr	
 		| variable ASSIGN string
 		| variable ASSIGN expr
 		| variable INC
 		| variable DEC
 		| multipleConditions // TODO multipleConditions must be inside if block
+		| ReturnStmt
 		;
 
-common
+commondeclarations
 	: multiplearguments 
 	| CONST type variable ASSIGN number 
 	| CONST type variable ASSIGN string 
@@ -150,10 +170,7 @@ MathOperations
 	: ADD 
 	| SUB
 	;
-operations
-	: MathOperations
-	| BitOperations
-	;
+
 
 expr 
     : expr BitOperations factor
@@ -178,6 +195,7 @@ factor
 	| OP expr CP
 	;
 
+	
 
 
 %%

@@ -61,7 +61,7 @@
      G = 277,
      NEQ = 278,
      ASSIGN = 279,
-     SS = 280,
+     FUNCNAME = 280,
      ADD = 281,
      SUB = 282,
      MUL = 283,
