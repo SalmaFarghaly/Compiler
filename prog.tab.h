@@ -57,11 +57,11 @@
      GE = 273,
      AND = 274,
      OR = 275,
-     XOR = 276,
-     ASSIGN = 277,
-     L = 278,
-     G = 279,
-     NEQ = 280,
+     L = 276,
+     G = 277,
+     NEQ = 278,
+     ASSIGN = 279,
+     SS = 280,
      ADD = 281,
      SUB = 282,
      MUL = 283,
@@ -69,17 +69,20 @@
      INC = 285,
      DEC = 286,
      REM = 287,
-     SEMICOLON = 288,
-     COMMA = 289,
-     IF = 290,
-     THEN = 291,
-     CONST = 292,
-     OP = 293,
-     CP = 294,
-     OB = 295,
-     CB = 296,
-     FALSE = 297,
-     TRUE = 298
+     XOR = 288,
+     BitwiseAnd = 289,
+     BitwiseOR = 290,
+     SEMICOLON = 291,
+     COMMA = 292,
+     IF = 293,
+     THEN = 294,
+     CONST = 295,
+     OP = 296,
+     CP = 297,
+     OB = 298,
+     CB = 299,
+     FALSE = 300,
+     TRUE = 301
    };
 #endif
 
@@ -105,7 +108,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 109 "prog.tab.h"
+#line 112 "prog.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

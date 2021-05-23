@@ -20,8 +20,8 @@ character \'[^'\n]\'
 ">="  return GE;
 "<="  return LE;
 "=="  return EQ;
-"false" return FALSE;
-"true" return TRUE;
+"false" { printf("false\n");return FALSE;}
+"true" {printf("true\n");return TRUE;}
 "<"   return L;
 ">"   return G;
 "!="  return NEQ;
@@ -31,6 +31,8 @@ character \'[^'\n]\'
 "++"  return INC;
 "--"  return DEC;
 "^"   return XOR;
+"|"   return BitwiseOR;
+"&"   return BitwiseAnd;
 "char"      return CHAR;
 "int"       return INT;
 "float"     return FLOAT;
@@ -49,10 +51,11 @@ character \'[^'\n]\'
 "if"	return IF;
 "then"	return THEN;
 
-{alpha}({alpha}|{digit})* {return IDENTIFIER;}
+
+{alpha}({alpha}|{digit})* {printf("IDENTIFIER\n");return IDENTIFIER;}
 {digit}+                  {return NUM;}
 [0-9]+\.[0-9]+            {return DECIMAL;}
-{str}                     {return EXPSTR;}
+{str}                     {printf("stringg\n");return EXPSTR;}
 {character}               {return EXPCHAR;}
 
 

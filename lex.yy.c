@@ -286,20 +286,20 @@ static void yy_fatal_error YY_PROTO(( yyconst char msg[] ));
 	*yy_cp = '\0'; \
 	yy_c_buf_p = yy_cp;
 
-#define YY_NUM_RULES 45
-#define YY_END_OF_BUFFER 46
+#define YY_NUM_RULES 47
+#define YY_END_OF_BUFFER 48
 static yyconst short int yy_accept[100] =
     {   0,
-        0,    0,   46,   44,   42,   43,   44,   44,    5,   44,
-       44,   30,   31,    3,    2,   29,    1,    4,   38,   28,
-       11,   14,   12,   37,   19,   37,   37,   37,   37,   37,
-       37,   37,   37,   37,   32,   44,   33,   13,    0,   40,
-       15,    0,   17,   18,    0,   38,    7,    8,    6,   37,
-       37,   37,   37,   37,   37,   37,   35,   37,   37,   37,
-       37,   37,   37,   16,   41,   39,   37,   37,   37,   37,
-       37,   37,   21,   37,   37,   37,   37,   37,   27,   20,
-       37,   37,   37,   37,   37,   37,   36,   10,   24,   34,
-       37,    9,   22,   37,   37,   26,   25,   23,    0
+        0,    0,   48,   46,   44,   45,   46,   46,    5,   21,
+       46,   32,   33,    3,    2,   31,    1,    4,   40,   30,
+       11,   14,   12,   39,   19,   39,   39,   39,   39,   39,
+       39,   39,   39,   39,   34,   20,   35,   13,    0,   42,
+       15,    0,   17,   18,    0,   40,    7,    8,    6,   39,
+       39,   39,   39,   39,   39,   39,   37,   39,   39,   39,
+       39,   39,   39,   16,   43,   41,   39,   39,   39,   39,
+       39,   39,   23,   39,   39,   39,   39,   39,   29,   22,
+       39,   39,   39,   39,   39,   39,   38,   10,   26,   36,
+       39,    9,   24,   39,   39,   28,   27,   25,    0
 
     } ;
 
@@ -424,13 +424,13 @@ static char *yy_last_accepting_cpos;
 extern int yy_flex_debug;
 int yy_flex_debug = 1;
 
-static yyconst short int yy_rule_linenum[45] =
+static yyconst short int yy_rule_linenum[47] =
     {   0,
        15,   16,   17,   18,   19,   20,   21,   22,   23,   24,
        25,   26,   27,   28,   29,   30,   31,   32,   33,   34,
        35,   36,   37,   38,   39,   40,   41,   42,   43,   44,
-       45,   46,   47,   48,   49,   50,   52,   53,   54,   55,
-       56,   59,   60,   61
+       45,   46,   47,   48,   49,   50,   51,   52,   55,   56,
+       57,   58,   59,   62,   63,   64
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -680,13 +680,13 @@ do_action:	/* This label is used only to access EOF actions. */
 			{
 			if ( yy_act == 0 )
 				fprintf( stderr, "--scanner backing up\n" );
-			else if ( yy_act < 45 )
+			else if ( yy_act < 47 )
 				fprintf( stderr, "--accepting rule at line %d (\"%s\")\n",
 				         yy_rule_linenum[yy_act], yytext );
-			else if ( yy_act == 45 )
+			else if ( yy_act == 47 )
 				fprintf( stderr, "--accepting default rule (\"%s\")\n",
 				         yytext );
-			else if ( yy_act == 46 )
+			else if ( yy_act == 48 )
 				fprintf( stderr, "--(end of buffer or a NUL)\n" );
 			else
 				fprintf( stderr, "--EOF (start condition %d)\n", YY_START );
@@ -744,12 +744,12 @@ return EQ;
 case 9:
 YY_RULE_SETUP
 #line 23 "lex.l"
-return FALSE;
+{ printf("false\n");return FALSE;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
 #line 24 "lex.l"
-return TRUE;
+{printf("true\n");return TRUE;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
@@ -799,134 +799,144 @@ return XOR;
 case 20:
 YY_RULE_SETUP
 #line 34 "lex.l"
-return CHAR;
+return BitwiseOR;
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
 #line 35 "lex.l"
-return INT;
+return BitwiseAnd;
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
 #line 36 "lex.l"
-return FLOAT;
+return CHAR;
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
 #line 37 "lex.l"
-return STRING; 
+return INT;
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
 #line 38 "lex.l"
-return VOID;
+return FLOAT;
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
 #line 39 "lex.l"
-return RETURN;
+return STRING; 
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
 #line 40 "lex.l"
-return DOUBLE; 
+return VOID;
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
 #line 41 "lex.l"
-return BOOL;
+return RETURN;
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
 #line 42 "lex.l"
-return SEMICOLON;
+return DOUBLE; 
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
 #line 43 "lex.l"
-return COMMA;
+return BOOL;
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
 #line 44 "lex.l"
-return OP;
+return SEMICOLON;
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
 #line 45 "lex.l"
-return CP;
+return COMMA;
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
 #line 46 "lex.l"
-return OB;
+return OP;
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
 #line 47 "lex.l"
-return CB;
+return CP;
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
 #line 48 "lex.l"
-return CONST;
+return OB;
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
 #line 49 "lex.l"
-return IF;
+return CB;
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
 #line 50 "lex.l"
-return THEN;
+return CONST;
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 52 "lex.l"
-{return IDENTIFIER;}
+#line 51 "lex.l"
+return IF;
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 53 "lex.l"
-{return NUM;}
+#line 52 "lex.l"
+return THEN;
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 54 "lex.l"
-{return DECIMAL;}
+#line 55 "lex.l"
+{printf("IDENTIFIER\n");return IDENTIFIER;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 55 "lex.l"
-{return EXPSTR;}
+#line 56 "lex.l"
+{return NUM;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 56 "lex.l"
-{return EXPCHAR;}
+#line 57 "lex.l"
+{return DECIMAL;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 59 "lex.l"
-;
+#line 58 "lex.l"
+{printf("stringg\n");return EXPSTR;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 60 "lex.l"
-{printf("found newline\n");}
+#line 59 "lex.l"
+{return EXPCHAR;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 61 "lex.l"
+#line 62 "lex.l"
 ;
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
 #line 63 "lex.l"
+{printf("found newline\n");}
+	YY_BREAK
+case 46:
+YY_RULE_SETUP
+#line 64 "lex.l"
+;
+	YY_BREAK
+case 47:
+YY_RULE_SETUP
+#line 66 "lex.l"
 ECHO;
 	YY_BREAK
-#line 930 "lex.yy.c"
+#line 940 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1812,7 +1822,7 @@ int main()
 	return 0;
 	}
 #endif
-#line 63 "lex.l"
+#line 66 "lex.l"
 
 
 int yywrap(void) {
