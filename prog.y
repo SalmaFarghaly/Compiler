@@ -27,8 +27,11 @@
 %token  <ourinfo> EXPCHAR
 %token  <ourinfo> EXPSTR 
 %token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL
-%token  EQ LE GE AND OR XOR ASSIGN L G NEQ
+%token  EQ LE GE AND OR L G NEQ
+%token  ASSIGN
+%token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
+%token  XOR BitwiseAnd BitwiseOR
 %token SEMICOLON COMMA IF THEN CONST
 %token  OP CP OB CB
 %token FALSE TRUE
@@ -41,7 +44,7 @@ block
 	: line
 	|line block
 
-	| ob line CB
+	| ob line CB // figure it out
 	| ob line CB block
 	
 	| ob line block CB
@@ -49,10 +52,9 @@ block
 	;
 
 line
-	: 
-	| statements SEMICOLON line
-	| function_decl line
-	| function_def line
+	: statements SEMICOLON
+	| function_decl
+	| function_def
 	;
 
 
@@ -90,6 +92,12 @@ type
 	| BOOL {  $<ourinfo>1.type = 5 ; $<ourinfo>$=$<ourinfo>1; typeno=5;} 
 	;
 
+
+ReturnType
+	: VOID
+	| type
+	;
+
 variable
 	: IDENTIFIER {  strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
 	;
@@ -102,19 +110,26 @@ argument
 
 
 statements 
-		: multiplearguments 
-		| CONST argument ASSIGN number 
-		| CONST argument ASSIGN string 
-		| multiplearguments ASSIGN string  
+		: commondeclarations 
 		| multiplearguments ASSIGN expr	
+		| variable ASSIGN string
+		| variable ASSIGN expr
 		| variable INC
 		| variable DEC
-		| condition // shouldnot be here
+		| multipleConditions // TODO multipleConditions must be inside if block
+		/*| ReturnStmt*/
 		;
 
+commondeclarations
+	: multiplearguments 
+	| CONST type variable ASSIGN number 
+	| CONST type variable ASSIGN string 
+	| multiplearguments ASSIGN string  
+	;
+
 multiplearguments
-	: argument
-	|  argument multipledeclarations
+	: type variable
+	| type variable multipledeclarations
 	;
 
 multipledeclarations
@@ -123,21 +138,42 @@ multipledeclarations
 	;
 
 comparsions
-	: EQ | GE | LE | L | G | NEQ;
+	: Equals
+	| GE 
+	| LE 
+	| L 
+	| G 
+	;
+
+Equals
+	: EQ
+	| NEQ
+	;
+BitOperations
+	: XOR
+	| BitwiseOR
+	| BitwiseAnd
+	;
 
 BOOLEANS
 	: TRUE
 	| FALSE
-
-condition
-	: expr comparsions expr
-	| IDENTIFIER EQ BOOLEANS
 	;
-	
+
+multipleConditions
+	: condition
+	| condition logicals multipleConditions
+	;
+
+condition //(o/p of function or variable == bool )eq boolean 
+	: expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
+	;
+
 logicals
 	: AND
 	| OR
 	;
+
 number
 	: NUM	
 	| DECIMAL	
@@ -148,16 +184,21 @@ string
 	| EXPCHAR 
 	;
 
-operation
+MathOperations
 	: ADD 
-	| SUB 
+	| SUB
 	;
 
+
 expr 
-    : expr operation factor
-	| term
+    : expr BitOperations factor
+	| expr2
+	| BOOLEANS
+	;
 
-
+expr2
+	: expr2  MathOperations factor
+	| term 
 	;
 
 term
@@ -171,6 +212,8 @@ factor
 	| variable //a= a+3
 	| OP expr CP
 	;
+
+	
 
 
 %%
@@ -187,7 +230,7 @@ extern FILE *yyin;
 int main()
 {
 	yyin=fopen("input.c","r");
-	
+	int yydebug=1;
 	yyparse();
 	
 	fclose(yyin);
