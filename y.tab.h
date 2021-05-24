@@ -82,6 +82,49 @@
      TRUE = 298
    };
 #endif
+/* Tokens.  */
+#define IDENTIFIER 258
+#define NUM 259
+#define DECIMAL 260
+#define EXPCHAR 261
+#define EXPSTR 262
+#define CHAR 263
+#define INT 264
+#define FLOAT 265
+#define DOUBLE 266
+#define STRING 267
+#define VOID 268
+#define RETURN 269
+#define BOOL 270
+#define EQ 271
+#define LE 272
+#define GE 273
+#define AND 274
+#define OR 275
+#define XOR 276
+#define ASSIGN 277
+#define L 278
+#define G 279
+#define NEQ 280
+#define ADD 281
+#define SUB 282
+#define MUL 283
+#define DIV 284
+#define INC 285
+#define DEC 286
+#define REM 287
+#define SEMICOLON 288
+#define COMMA 289
+#define IF 290
+#define THEN 291
+#define CONST 292
+#define OP 293
+#define CP 294
+#define OB 295
+#define CB 296
+#define FALSE 297
+#define TRUE 298
+
 
 
 
@@ -93,7 +136,7 @@ typedef union YYSTYPE
 #line 11 "prog.y"
 
   struct info{ 
-		char* name;
+		char name[10];
         char* value;
 		int quadvalue;
 		char * quad;
@@ -105,7 +148,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 109 "prog.tab.h"
+#line 152 "y.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

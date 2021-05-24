@@ -10,7 +10,7 @@
 %}
 %union {
   struct info{ 
-		char* name;
+		char name[10];
         char* value;
 		int quadvalue;
 		char * quad;
@@ -20,7 +20,7 @@
     }ourinfo;
 }  
 
-%start line
+%start block
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
@@ -37,26 +37,63 @@
 
 %%
 
+block
+	: line
+	|line block
 
+	| ob line CB
+	| ob line CB block
+	
+	| ob line block CB
+	| ob line block CB block
+	;
 
 line
-	: statements SEMICOLON
+	: 
 	| statements SEMICOLON line
+	| function_decl line
+	| function_def line
 	;
 
 
+
+function_decl
+	: type variable OP parameters CP SEMICOLON { printf("Function %s declared\n", $<ourinfo>3.name);}
+	;
+
+function_def
+	: type variable OP parameters CP ob line CB { printf("Function %s definition\n", $<ourinfo>2.name);}
+
+parameters: type variable | type variable multipleparameters {strcpy($<ourinfo>$.name, "test");}
+
+multipleparameters: COMMA type variable | COMMA type variable multipleparameters 
+
+
+ob: OB {/* handle beginning of new scope */ printf("new scope\n");};
+
 type 
-	: INT   {  $<ourinfo>1.type = 2 ; $<ourinfo>$=$<ourinfo>1; typeno=2;printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);}
-	| CHAR  {  $<ourinfo>1.type = 1 ; $<ourinfo>$=$<ourinfo>1; typeno=1}
-	| FLOAT {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3}
-	| VOID  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=0}
-	| STRING {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=4} 
-	| BOOL {  $<ourinfo>1.type = 5 ; $<ourinfo>$=$<ourinfo>1; typeno=5} 
+	: INT   {  
+			$<ourinfo>1.type = 2 ; 
+			$<ourinfo>$=$<ourinfo>1; 
+			typeno=2;
+			printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);
+			}
+
+	| CHAR  {  
+			$<ourinfo>1.type = 1 ; 
+			$<ourinfo>$=$<ourinfo>1; 
+			typeno=1;
+			}
+	| FLOAT {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3;}
+	| VOID  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=0;}
+	| STRING {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=4;} 
+	| BOOL {  $<ourinfo>1.type = 5 ; $<ourinfo>$=$<ourinfo>1; typeno=5;} 
 	;
 
 variable
-	: IDENTIFIER {  $<ourinfo>$.name=$<ourinfo>$.name; $<ourinfo>$.type=typeno;  printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {  strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
 	;
+
 
 argument 
 	: type variable
@@ -154,6 +191,9 @@ int main()
 	yyparse();
 	
 	fclose(yyin);
+	
+	int value;
+	scanf("%d", &value);
 	
 	return 0;
 }

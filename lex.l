@@ -1,5 +1,5 @@
 %{
-    #include"prog.tab.h"
+    #include"y.tab.h"
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<malloc.h>
@@ -49,7 +49,7 @@ character \'[^'\n]\'
 "if"	return IF;
 "then"	return THEN;
 
-{alpha}({alpha}|{digit})* {return IDENTIFIER;}
+{alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
 {digit}+                  {return NUM;}
 [0-9]+\.[0-9]+            {return DECIMAL;}
 {str}                     {return EXPSTR;}
@@ -57,7 +57,7 @@ character \'[^'\n]\'
 
 
 [ \t] ;
-[\n] {printf("found newline\n");}
+[\n] 
 . ;
 
 %%
