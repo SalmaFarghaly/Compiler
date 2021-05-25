@@ -15,161 +15,164 @@ Terminals unused in grammar
 
 Rules useless in grammar
 
-   67 ReturnType: VOID
-   68           | type
+   70 ReturnType: VOID
+   71           | type
 
-   69 argument: type variable
-   70         | variable
+   72 argument: type variable
+   73         | variable
 
 
-State 25 conflicts: 1 shift/reduce
-State 58 conflicts: 1 shift/reduce
+State 9 conflicts: 6 shift/reduce
+State 38 conflicts: 1 shift/reduce
 
 
 Grammar
 
     0 $accept: program $end
 
-    1 program: function
+    1 program: Function
+    2        | statements
+    3        | Function program
+    4        | statements program
 
-    2 line: statements SEMICOLON
-    3     | statements SEMICOLON line
+    5 line: statements SEMICOLON
+    6     | statements SEMICOLON line
 
-    4 function: type variable OP argListOpt CP OB line CB
-    5         | VOID variable OP argListOpt CP OB line CB
+    7 Function: type variable OP argListOpt CP OB line CB
+    8         | VOID variable OP argListOpt CP OB line CB
 
-    6 argListOpt: commondeclarations
-    7           | argListOpt COMMA commondeclarations
-    8           | /* empty */
+    9 argListOpt: type variable
+   10           | type variable COMMA argListOpt
+   11           | /* empty */
 
-    9 ReturnStmt: RETURN expr
-   10           | RETURN
+   12 ReturnStmt: RETURN expr
+   13           | RETURN
 
-   11 type: INT
-   12     | CHAR
-   13     | FLOAT
-   14     | STRING
-   15     | BOOL
+   14 type: INT
+   15     | CHAR
+   16     | FLOAT
+   17     | STRING
+   18     | BOOL
 
-   16 variable: IDENTIFIER
+   19 variable: IDENTIFIER
 
-   17 statements: commondeclarations
-   18           | multiplearguments ASSIGN expr
-   19           | variable ASSIGN string
-   20           | variable ASSIGN expr
-   21           | variable INC
-   22           | variable DEC
-   23           | multipleConditions
-   24           | ReturnStmt
+   20 statements: commondeclarations
+   21           | multiplearguments ASSIGN expr
+   22           | variable ASSIGN string
+   23           | variable ASSIGN expr
+   24           | variable INC
+   25           | variable DEC
+   26           | multipleConditions
+   27           | ReturnStmt
 
-   25 commondeclarations: multiplearguments
-   26                   | CONST type variable ASSIGN number
-   27                   | CONST type variable ASSIGN string
-   28                   | multiplearguments ASSIGN string
+   28 commondeclarations: multiplearguments
+   29                   | CONST type variable ASSIGN number
+   30                   | CONST type variable ASSIGN string
+   31                   | multiplearguments ASSIGN string
 
-   29 multiplearguments: type variable
-   30                  | type variable multipledeclarations
+   32 multiplearguments: type variable
+   33                  | type variable multipledeclarations
 
-   31 multipledeclarations: COMMA variable
-   32                     | COMMA variable multipledeclarations
+   34 multipledeclarations: COMMA variable
+   35                     | COMMA variable multipledeclarations
 
-   33 comparsions: Equals
-   34            | GE
-   35            | LE
-   36            | L
-   37            | G
+   36 comparsions: Equals
+   37            | GE
+   38            | LE
+   39            | L
+   40            | G
 
-   38 Equals: EQ
-   39       | NEQ
+   41 Equals: EQ
+   42       | NEQ
 
-   40 BitOperations: XOR
-   41              | BitwiseOR
-   42              | BitwiseAnd
+   43 BitOperations: XOR
+   44              | BitwiseOR
+   45              | BitwiseAnd
 
-   43 BOOLEANS: TRUE
-   44         | FALSE
+   46 BOOLEANS: TRUE
+   47         | FALSE
 
-   45 multipleConditions: condition
-   46                   | condition logicals multipleConditions
+   48 multipleConditions: condition
+   49                   | condition logicals multipleConditions
 
-   47 condition: expr comparsions expr
+   50 condition: expr comparsions expr
 
-   48 logicals: AND
-   49         | OR
+   51 logicals: AND
+   52         | OR
 
-   50 number: NUM
-   51       | DECIMAL
+   53 number: NUM
+   54       | DECIMAL
 
-   52 string: EXPSTR
-   53       | EXPCHAR
+   55 string: EXPSTR
+   56       | EXPCHAR
 
-   54 MathOperations: ADD
-   55               | SUB
+   57 MathOperations: ADD
+   58               | SUB
 
-   56 expr: expr BitOperations factor
-   57     | expr2
-   58     | BOOLEANS
+   59 expr: expr BitOperations factor
+   60     | expr2
+   61     | BOOLEANS
 
-   59 expr2: expr2 MathOperations factor
-   60      | term
+   62 expr2: expr2 MathOperations factor
+   63      | term
 
-   61 term: term MUL factor
-   62     | term DIV factor
-   63     | factor
+   64 term: term MUL factor
+   65     | term DIV factor
+   66     | factor
 
-   64 factor: number
-   65       | variable
-   66       | OP expr CP
+   67 factor: number
+   68       | variable
+   69       | OP expr CP
 
 
 Terminals, with rules where they appear
 
 $end (0) 0
 error (256)
-IDENTIFIER (258) 16
-NUM (259) 50
-DECIMAL (260) 51
-EXPCHAR (261) 53
-EXPSTR (262) 52
-CHAR (263) 12
-INT (264) 11
-FLOAT (265) 13
+IDENTIFIER (258) 19
+NUM (259) 53
+DECIMAL (260) 54
+EXPCHAR (261) 56
+EXPSTR (262) 55
+CHAR (263) 15
+INT (264) 14
+FLOAT (265) 16
 DOUBLE (266)
-STRING (267) 14
-VOID (268) 5
-RETURN (269) 9 10
-BOOL (270) 15
-EQ (271) 38
-LE (272) 35
-GE (273) 34
-AND (274) 48
-OR (275) 49
-L (276) 36
-G (277) 37
-NEQ (278) 39
-ASSIGN (279) 18 19 20 26 27 28
+STRING (267) 17
+VOID (268) 8
+RETURN (269) 12 13
+BOOL (270) 18
+EQ (271) 41
+LE (272) 38
+GE (273) 37
+AND (274) 51
+OR (275) 52
+L (276) 39
+G (277) 40
+NEQ (278) 42
+ASSIGN (279) 21 22 23 29 30 31
 FUNCNAME (280)
-ADD (281) 54
-SUB (282) 55
-MUL (283) 61
-DIV (284) 62
-INC (285) 21
-DEC (286) 22
+ADD (281) 57
+SUB (282) 58
+MUL (283) 64
+DIV (284) 65
+INC (285) 24
+DEC (286) 25
 REM (287)
-XOR (288) 40
-BitwiseAnd (289) 42
-BitwiseOR (290) 41
-SEMICOLON (291) 2 3
-COMMA (292) 7 31 32
+XOR (288) 43
+BitwiseAnd (289) 45
+BitwiseOR (290) 44
+SEMICOLON (291) 5 6
+COMMA (292) 10 34 35
 IF (293)
 THEN (294)
-CONST (295) 26 27
-OP (296) 4 5 66
-CP (297) 4 5 66
-OB (298) 4 5
-CB (299) 4 5
-FALSE (300) 44
-TRUE (301) 43
+CONST (295) 29 30
+OP (296) 7 8 69
+CP (297) 7 8 69
+OB (298) 7 8
+CB (299) 7 8
+FALSE (300) 47
+TRUE (301) 46
 
 
 Nonterminals, with rules where they appear
@@ -177,1155 +180,1260 @@ Nonterminals, with rules where they appear
 $accept (47)
     on left: 0
 program (48)
-    on left: 1, on right: 0
+    on left: 1 2 3 4, on right: 0 3 4
 line (49)
-    on left: 2 3, on right: 3 4 5
-function (50)
-    on left: 4 5, on right: 1
+    on left: 5 6, on right: 6 7 8
+Function (50)
+    on left: 7 8, on right: 1 3
 argListOpt (51)
-    on left: 6 7 8, on right: 4 5 7
+    on left: 9 10 11, on right: 7 8 10
 ReturnStmt (52)
-    on left: 9 10, on right: 24
+    on left: 12 13, on right: 27
 type (53)
-    on left: 11 12 13 14 15, on right: 4 26 27 29 30
+    on left: 14 15 16 17 18, on right: 7 9 10 29 30 32 33
 variable (54)
-    on left: 16, on right: 4 5 19 20 21 22 26 27 29 30 31 32 65
+    on left: 19, on right: 7 8 9 10 22 23 24 25 29 30 32 33 34 35 68
 statements (55)
-    on left: 17 18 19 20 21 22 23 24, on right: 2 3
+    on left: 20 21 22 23 24 25 26 27, on right: 2 4 5 6
 commondeclarations (56)
-    on left: 25 26 27 28, on right: 6 7 17
+    on left: 28 29 30 31, on right: 20
 multiplearguments (57)
-    on left: 29 30, on right: 18 25 28
+    on left: 32 33, on right: 21 28 31
 multipledeclarations (58)
-    on left: 31 32, on right: 30 32
+    on left: 34 35, on right: 33 35
 comparsions (59)
-    on left: 33 34 35 36 37, on right: 47
+    on left: 36 37 38 39 40, on right: 50
 Equals (60)
-    on left: 38 39, on right: 33
+    on left: 41 42, on right: 36
 BitOperations (61)
-    on left: 40 41 42, on right: 56
+    on left: 43 44 45, on right: 59
 BOOLEANS (62)
-    on left: 43 44, on right: 58
+    on left: 46 47, on right: 61
 multipleConditions (63)
-    on left: 45 46, on right: 23 46
+    on left: 48 49, on right: 26 49
 condition (64)
-    on left: 47, on right: 45 46
+    on left: 50, on right: 48 49
 logicals (65)
-    on left: 48 49, on right: 46
+    on left: 51 52, on right: 49
 number (66)
-    on left: 50 51, on right: 26 64
+    on left: 53 54, on right: 29 67
 string (67)
-    on left: 52 53, on right: 19 27 28
+    on left: 55 56, on right: 22 30 31
 MathOperations (68)
-    on left: 54 55, on right: 59
+    on left: 57 58, on right: 62
 expr (69)
-    on left: 56 57 58, on right: 9 18 20 47 56 66
+    on left: 59 60 61, on right: 12 21 23 50 59 69
 expr2 (70)
-    on left: 59 60, on right: 57 59
+    on left: 62 63, on right: 60 62
 term (71)
-    on left: 61 62 63, on right: 60 61 62
+    on left: 64 65 66, on right: 63 64 65
 factor (72)
-    on left: 64 65 66, on right: 56 59 61 62 63
+    on left: 67 68 69, on right: 59 62 64 65 66
 
 
 state 0
 
     0 $accept: . program $end
 
-    CHAR    shift, and go to state 1
-    INT     shift, and go to state 2
-    FLOAT   shift, and go to state 3
-    STRING  shift, and go to state 4
-    VOID    shift, and go to state 5
-    BOOL    shift, and go to state 6
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    VOID        shift, and go to state 8
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
 
-    program   go to state 7
-    function  go to state 8
-    type      go to state 9
+    program             go to state 15
+    Function            go to state 16
+    ReturnStmt          go to state 17
+    type                go to state 18
+    variable            go to state 19
+    statements          go to state 20
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
 
 
 state 1
 
-   12 type: CHAR .
+   19 variable: IDENTIFIER .
 
-    $default  reduce using rule 12 (type)
+    $default  reduce using rule 19 (variable)
 
 
 state 2
 
-   11 type: INT .
+   53 number: NUM .
 
-    $default  reduce using rule 11 (type)
+    $default  reduce using rule 53 (number)
 
 
 state 3
 
-   13 type: FLOAT .
+   54 number: DECIMAL .
 
-    $default  reduce using rule 13 (type)
+    $default  reduce using rule 54 (number)
 
 
 state 4
 
-   14 type: STRING .
-
-    $default  reduce using rule 14 (type)
-
-
-state 5
-
-    5 function: VOID . variable OP argListOpt CP OB line CB
-
-    IDENTIFIER  shift, and go to state 10
-
-    variable  go to state 11
-
-
-state 6
-
-   15 type: BOOL .
+   15 type: CHAR .
 
     $default  reduce using rule 15 (type)
 
 
+state 5
+
+   14 type: INT .
+
+    $default  reduce using rule 14 (type)
+
+
+state 6
+
+   16 type: FLOAT .
+
+    $default  reduce using rule 16 (type)
+
+
 state 7
 
-    0 $accept: program . $end
+   17 type: STRING .
 
-    $end  shift, and go to state 12
+    $default  reduce using rule 17 (type)
 
 
 state 8
 
-    1 program: function .
+    8 Function: VOID . variable OP argListOpt CP OB line CB
 
-    $default  reduce using rule 1 (program)
+    IDENTIFIER  shift, and go to state 1
+
+    variable  go to state 31
 
 
 state 9
 
-    4 function: type . variable OP argListOpt CP OB line CB
+   12 ReturnStmt: RETURN . expr
+   13           | RETURN .
 
-    IDENTIFIER  shift, and go to state 10
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
 
-    variable  go to state 13
+    IDENTIFIER  [reduce using rule 13 (ReturnStmt)]
+    NUM         [reduce using rule 13 (ReturnStmt)]
+    DECIMAL     [reduce using rule 13 (ReturnStmt)]
+    OP          [reduce using rule 13 (ReturnStmt)]
+    FALSE       [reduce using rule 13 (ReturnStmt)]
+    TRUE        [reduce using rule 13 (ReturnStmt)]
+    $default    reduce using rule 13 (ReturnStmt)
+
+    variable  go to state 32
+    BOOLEANS  go to state 23
+    number    go to state 26
+    expr      go to state 33
+    expr2     go to state 28
+    term      go to state 29
+    factor    go to state 30
 
 
 state 10
 
-   16 variable: IDENTIFIER .
+   18 type: BOOL .
 
-    $default  reduce using rule 16 (variable)
+    $default  reduce using rule 18 (type)
 
 
 state 11
 
-    5 function: VOID variable . OP argListOpt CP OB line CB
+   29 commondeclarations: CONST . type variable ASSIGN number
+   30                   | CONST . type variable ASSIGN string
 
-    OP  shift, and go to state 14
+    CHAR    shift, and go to state 4
+    INT     shift, and go to state 5
+    FLOAT   shift, and go to state 6
+    STRING  shift, and go to state 7
+    BOOL    shift, and go to state 10
+
+    type  go to state 34
 
 
 state 12
+
+   69 factor: OP . expr CP
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    variable  go to state 32
+    BOOLEANS  go to state 23
+    number    go to state 26
+    expr      go to state 35
+    expr2     go to state 28
+    term      go to state 29
+    factor    go to state 30
+
+
+state 13
+
+   47 BOOLEANS: FALSE .
+
+    $default  reduce using rule 47 (BOOLEANS)
+
+
+state 14
+
+   46 BOOLEANS: TRUE .
+
+    $default  reduce using rule 46 (BOOLEANS)
+
+
+state 15
+
+    0 $accept: program . $end
+
+    $end  shift, and go to state 36
+
+
+state 16
+
+    1 program: Function .
+    3        | Function . program
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    VOID        shift, and go to state 8
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    $default  reduce using rule 1 (program)
+
+    program             go to state 37
+    Function            go to state 16
+    ReturnStmt          go to state 17
+    type                go to state 18
+    variable            go to state 19
+    statements          go to state 20
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
+
+
+state 17
+
+   27 statements: ReturnStmt .
+
+    $default  reduce using rule 27 (statements)
+
+
+state 18
+
+    7 Function: type . variable OP argListOpt CP OB line CB
+   32 multiplearguments: type . variable
+   33                  | type . variable multipledeclarations
+
+    IDENTIFIER  shift, and go to state 1
+
+    variable  go to state 38
+
+
+state 19
+
+   22 statements: variable . ASSIGN string
+   23           | variable . ASSIGN expr
+   24           | variable . INC
+   25           | variable . DEC
+   68 factor: variable .
+
+    ASSIGN  shift, and go to state 39
+    INC     shift, and go to state 40
+    DEC     shift, and go to state 41
+
+    $default  reduce using rule 68 (factor)
+
+
+state 20
+
+    2 program: statements .
+    4        | statements . program
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    VOID        shift, and go to state 8
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    $default  reduce using rule 2 (program)
+
+    program             go to state 42
+    Function            go to state 16
+    ReturnStmt          go to state 17
+    type                go to state 18
+    variable            go to state 19
+    statements          go to state 20
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
+
+
+state 21
+
+   20 statements: commondeclarations .
+
+    $default  reduce using rule 20 (statements)
+
+
+state 22
+
+   21 statements: multiplearguments . ASSIGN expr
+   28 commondeclarations: multiplearguments .
+   31                   | multiplearguments . ASSIGN string
+
+    ASSIGN  shift, and go to state 43
+
+    $default  reduce using rule 28 (commondeclarations)
+
+
+state 23
+
+   61 expr: BOOLEANS .
+
+    $default  reduce using rule 61 (expr)
+
+
+state 24
+
+   26 statements: multipleConditions .
+
+    $default  reduce using rule 26 (statements)
+
+
+state 25
+
+   48 multipleConditions: condition .
+   49                   | condition . logicals multipleConditions
+
+    AND  shift, and go to state 44
+    OR   shift, and go to state 45
+
+    $default  reduce using rule 48 (multipleConditions)
+
+    logicals  go to state 46
+
+
+state 26
+
+   67 factor: number .
+
+    $default  reduce using rule 67 (factor)
+
+
+state 27
+
+   50 condition: expr . comparsions expr
+   59 expr: expr . BitOperations factor
+
+    EQ          shift, and go to state 47
+    LE          shift, and go to state 48
+    GE          shift, and go to state 49
+    L           shift, and go to state 50
+    G           shift, and go to state 51
+    NEQ         shift, and go to state 52
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+
+    comparsions    go to state 56
+    Equals         go to state 57
+    BitOperations  go to state 58
+
+
+state 28
+
+   60 expr: expr2 .
+   62 expr2: expr2 . MathOperations factor
+
+    ADD  shift, and go to state 59
+    SUB  shift, and go to state 60
+
+    $default  reduce using rule 60 (expr)
+
+    MathOperations  go to state 61
+
+
+state 29
+
+   63 expr2: term .
+   64 term: term . MUL factor
+   65     | term . DIV factor
+
+    MUL  shift, and go to state 62
+    DIV  shift, and go to state 63
+
+    $default  reduce using rule 63 (expr2)
+
+
+state 30
+
+   66 term: factor .
+
+    $default  reduce using rule 66 (term)
+
+
+state 31
+
+    8 Function: VOID variable . OP argListOpt CP OB line CB
+
+    OP  shift, and go to state 64
+
+
+state 32
+
+   68 factor: variable .
+
+    $default  reduce using rule 68 (factor)
+
+
+state 33
+
+   12 ReturnStmt: RETURN expr .
+   59 expr: expr . BitOperations factor
+
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+
+    $default  reduce using rule 12 (ReturnStmt)
+
+    BitOperations  go to state 58
+
+
+state 34
+
+   29 commondeclarations: CONST type . variable ASSIGN number
+   30                   | CONST type . variable ASSIGN string
+
+    IDENTIFIER  shift, and go to state 1
+
+    variable  go to state 65
+
+
+state 35
+
+   59 expr: expr . BitOperations factor
+   69 factor: OP expr . CP
+
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+    CP          shift, and go to state 66
+
+    BitOperations  go to state 58
+
+
+state 36
 
     0 $accept: program $end .
 
     $default  accept
 
 
-state 13
-
-    4 function: type variable . OP argListOpt CP OB line CB
-
-    OP  shift, and go to state 15
-
-
-state 14
-
-    5 function: VOID variable OP . argListOpt CP OB line CB
-
-    CHAR    shift, and go to state 1
-    INT     shift, and go to state 2
-    FLOAT   shift, and go to state 3
-    STRING  shift, and go to state 4
-    BOOL    shift, and go to state 6
-    CONST   shift, and go to state 16
-
-    $default  reduce using rule 8 (argListOpt)
-
-    argListOpt          go to state 17
-    type                go to state 18
-    commondeclarations  go to state 19
-    multiplearguments   go to state 20
-
-
-state 15
-
-    4 function: type variable OP . argListOpt CP OB line CB
-
-    CHAR    shift, and go to state 1
-    INT     shift, and go to state 2
-    FLOAT   shift, and go to state 3
-    STRING  shift, and go to state 4
-    BOOL    shift, and go to state 6
-    CONST   shift, and go to state 16
-
-    $default  reduce using rule 8 (argListOpt)
-
-    argListOpt          go to state 21
-    type                go to state 18
-    commondeclarations  go to state 19
-    multiplearguments   go to state 20
-
-
-state 16
-
-   26 commondeclarations: CONST . type variable ASSIGN number
-   27                   | CONST . type variable ASSIGN string
-
-    CHAR    shift, and go to state 1
-    INT     shift, and go to state 2
-    FLOAT   shift, and go to state 3
-    STRING  shift, and go to state 4
-    BOOL    shift, and go to state 6
-
-    type  go to state 22
-
-
-state 17
-
-    5 function: VOID variable OP argListOpt . CP OB line CB
-    7 argListOpt: argListOpt . COMMA commondeclarations
-
-    COMMA  shift, and go to state 23
-    CP     shift, and go to state 24
-
-
-state 18
-
-   29 multiplearguments: type . variable
-   30                  | type . variable multipledeclarations
-
-    IDENTIFIER  shift, and go to state 10
-
-    variable  go to state 25
-
-
-state 19
-
-    6 argListOpt: commondeclarations .
-
-    $default  reduce using rule 6 (argListOpt)
-
-
-state 20
-
-   25 commondeclarations: multiplearguments .
-   28                   | multiplearguments . ASSIGN string
-
-    ASSIGN  shift, and go to state 26
-
-    $default  reduce using rule 25 (commondeclarations)
-
-
-state 21
-
-    4 function: type variable OP argListOpt . CP OB line CB
-    7 argListOpt: argListOpt . COMMA commondeclarations
-
-    COMMA  shift, and go to state 23
-    CP     shift, and go to state 27
-
-
-state 22
-
-   26 commondeclarations: CONST type . variable ASSIGN number
-   27                   | CONST type . variable ASSIGN string
-
-    IDENTIFIER  shift, and go to state 10
-
-    variable  go to state 28
-
-
-state 23
-
-    7 argListOpt: argListOpt COMMA . commondeclarations
-
-    CHAR    shift, and go to state 1
-    INT     shift, and go to state 2
-    FLOAT   shift, and go to state 3
-    STRING  shift, and go to state 4
-    BOOL    shift, and go to state 6
-    CONST   shift, and go to state 16
-
-    type                go to state 18
-    commondeclarations  go to state 29
-    multiplearguments   go to state 20
-
-
-state 24
-
-    5 function: VOID variable OP argListOpt CP . OB line CB
-
-    OB  shift, and go to state 30
-
-
-state 25
-
-   29 multiplearguments: type variable .
-   30                  | type variable . multipledeclarations
-
-    COMMA  shift, and go to state 31
-
-    COMMA     [reduce using rule 29 (multiplearguments)]
-    $default  reduce using rule 29 (multiplearguments)
-
-    multipledeclarations  go to state 32
-
-
-state 26
-
-   28 commondeclarations: multiplearguments ASSIGN . string
-
-    EXPCHAR  shift, and go to state 33
-    EXPSTR   shift, and go to state 34
-
-    string  go to state 35
-
-
-state 27
-
-    4 function: type variable OP argListOpt CP . OB line CB
-
-    OB  shift, and go to state 36
-
-
-state 28
-
-   26 commondeclarations: CONST type variable . ASSIGN number
-   27                   | CONST type variable . ASSIGN string
-
-    ASSIGN  shift, and go to state 37
-
-
-state 29
-
-    7 argListOpt: argListOpt COMMA commondeclarations .
-
-    $default  reduce using rule 7 (argListOpt)
-
-
-state 30
-
-    5 function: VOID variable OP argListOpt CP OB . line CB
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    CHAR        shift, and go to state 1
-    INT         shift, and go to state 2
-    FLOAT       shift, and go to state 3
-    STRING      shift, and go to state 4
-    RETURN      shift, and go to state 40
-    BOOL        shift, and go to state 6
-    CONST       shift, and go to state 16
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    line                go to state 44
-    ReturnStmt          go to state 45
-    type                go to state 18
-    variable            go to state 46
-    statements          go to state 47
-    commondeclarations  go to state 48
-    multiplearguments   go to state 49
-    BOOLEANS            go to state 50
-    multipleConditions  go to state 51
-    condition           go to state 52
-    number              go to state 53
-    expr                go to state 54
-    expr2               go to state 55
-    term                go to state 56
-    factor              go to state 57
-
-
-state 31
-
-   31 multipledeclarations: COMMA . variable
-   32                     | COMMA . variable multipledeclarations
-
-    IDENTIFIER  shift, and go to state 10
-
-    variable  go to state 58
-
-
-state 32
-
-   30 multiplearguments: type variable multipledeclarations .
-
-    $default  reduce using rule 30 (multiplearguments)
-
-
-state 33
-
-   53 string: EXPCHAR .
-
-    $default  reduce using rule 53 (string)
-
-
-state 34
-
-   52 string: EXPSTR .
-
-    $default  reduce using rule 52 (string)
-
-
-state 35
-
-   28 commondeclarations: multiplearguments ASSIGN string .
-
-    $default  reduce using rule 28 (commondeclarations)
-
-
-state 36
-
-    4 function: type variable OP argListOpt CP OB . line CB
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    CHAR        shift, and go to state 1
-    INT         shift, and go to state 2
-    FLOAT       shift, and go to state 3
-    STRING      shift, and go to state 4
-    RETURN      shift, and go to state 40
-    BOOL        shift, and go to state 6
-    CONST       shift, and go to state 16
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    line                go to state 59
-    ReturnStmt          go to state 45
-    type                go to state 18
-    variable            go to state 46
-    statements          go to state 47
-    commondeclarations  go to state 48
-    multiplearguments   go to state 49
-    BOOLEANS            go to state 50
-    multipleConditions  go to state 51
-    condition           go to state 52
-    number              go to state 53
-    expr                go to state 54
-    expr2               go to state 55
-    term                go to state 56
-    factor              go to state 57
-
-
 state 37
 
-   26 commondeclarations: CONST type variable ASSIGN . number
-   27                   | CONST type variable ASSIGN . string
+    3 program: Function program .
 
-    NUM      shift, and go to state 38
-    DECIMAL  shift, and go to state 39
-    EXPCHAR  shift, and go to state 33
-    EXPSTR   shift, and go to state 34
-
-    number  go to state 60
-    string  go to state 61
+    $default  reduce using rule 3 (program)
 
 
 state 38
 
-   50 number: NUM .
+    7 Function: type variable . OP argListOpt CP OB line CB
+   32 multiplearguments: type variable .
+   33                  | type variable . multipledeclarations
 
-    $default  reduce using rule 50 (number)
+    COMMA  shift, and go to state 67
+    OP     shift, and go to state 68
+
+    OP        [reduce using rule 32 (multiplearguments)]
+    $default  reduce using rule 32 (multiplearguments)
+
+    multipledeclarations  go to state 69
 
 
 state 39
 
-   51 number: DECIMAL .
+   22 statements: variable ASSIGN . string
+   23           | variable ASSIGN . expr
 
-    $default  reduce using rule 51 (number)
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    EXPCHAR     shift, and go to state 70
+    EXPSTR      shift, and go to state 71
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    variable  go to state 32
+    BOOLEANS  go to state 23
+    number    go to state 26
+    string    go to state 72
+    expr      go to state 73
+    expr2     go to state 28
+    term      go to state 29
+    factor    go to state 30
 
 
 state 40
 
-    9 ReturnStmt: RETURN . expr
-   10           | RETURN .
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    $default  reduce using rule 10 (ReturnStmt)
-
-    variable  go to state 62
-    BOOLEANS  go to state 50
-    number    go to state 53
-    expr      go to state 63
-    expr2     go to state 55
-    term      go to state 56
-    factor    go to state 57
-
-
-state 41
-
-   66 factor: OP . expr CP
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    variable  go to state 62
-    BOOLEANS  go to state 50
-    number    go to state 53
-    expr      go to state 64
-    expr2     go to state 55
-    term      go to state 56
-    factor    go to state 57
-
-
-state 42
-
-   44 BOOLEANS: FALSE .
-
-    $default  reduce using rule 44 (BOOLEANS)
-
-
-state 43
-
-   43 BOOLEANS: TRUE .
-
-    $default  reduce using rule 43 (BOOLEANS)
-
-
-state 44
-
-    5 function: VOID variable OP argListOpt CP OB line . CB
-
-    CB  shift, and go to state 65
-
-
-state 45
-
-   24 statements: ReturnStmt .
+   24 statements: variable INC .
 
     $default  reduce using rule 24 (statements)
 
 
+state 41
+
+   25 statements: variable DEC .
+
+    $default  reduce using rule 25 (statements)
+
+
+state 42
+
+    4 program: statements program .
+
+    $default  reduce using rule 4 (program)
+
+
+state 43
+
+   21 statements: multiplearguments ASSIGN . expr
+   31 commondeclarations: multiplearguments ASSIGN . string
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    EXPCHAR     shift, and go to state 70
+    EXPSTR      shift, and go to state 71
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    variable  go to state 32
+    BOOLEANS  go to state 23
+    number    go to state 26
+    string    go to state 74
+    expr      go to state 75
+    expr2     go to state 28
+    term      go to state 29
+    factor    go to state 30
+
+
+state 44
+
+   51 logicals: AND .
+
+    $default  reduce using rule 51 (logicals)
+
+
+state 45
+
+   52 logicals: OR .
+
+    $default  reduce using rule 52 (logicals)
+
+
 state 46
 
-   19 statements: variable . ASSIGN string
-   20           | variable . ASSIGN expr
-   21           | variable . INC
-   22           | variable . DEC
-   65 factor: variable .
+   49 multipleConditions: condition logicals . multipleConditions
 
-    ASSIGN  shift, and go to state 66
-    INC     shift, and go to state 67
-    DEC     shift, and go to state 68
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
 
-    $default  reduce using rule 65 (factor)
+    variable            go to state 32
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 76
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
 
 
 state 47
 
-    2 line: statements . SEMICOLON
-    3     | statements . SEMICOLON line
+   41 Equals: EQ .
 
-    SEMICOLON  shift, and go to state 69
+    $default  reduce using rule 41 (Equals)
 
 
 state 48
 
-   17 statements: commondeclarations .
+   38 comparsions: LE .
 
-    $default  reduce using rule 17 (statements)
+    $default  reduce using rule 38 (comparsions)
 
 
 state 49
 
-   18 statements: multiplearguments . ASSIGN expr
-   25 commondeclarations: multiplearguments .
-   28                   | multiplearguments . ASSIGN string
-
-    ASSIGN  shift, and go to state 70
-
-    $default  reduce using rule 25 (commondeclarations)
-
-
-state 50
-
-   58 expr: BOOLEANS .
-
-    $default  reduce using rule 58 (expr)
-
-
-state 51
-
-   23 statements: multipleConditions .
-
-    $default  reduce using rule 23 (statements)
-
-
-state 52
-
-   45 multipleConditions: condition .
-   46                   | condition . logicals multipleConditions
-
-    AND  shift, and go to state 71
-    OR   shift, and go to state 72
-
-    $default  reduce using rule 45 (multipleConditions)
-
-    logicals  go to state 73
-
-
-state 53
-
-   64 factor: number .
-
-    $default  reduce using rule 64 (factor)
-
-
-state 54
-
-   47 condition: expr . comparsions expr
-   56 expr: expr . BitOperations factor
-
-    EQ          shift, and go to state 74
-    LE          shift, and go to state 75
-    GE          shift, and go to state 76
-    L           shift, and go to state 77
-    G           shift, and go to state 78
-    NEQ         shift, and go to state 79
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
-
-    comparsions    go to state 83
-    Equals         go to state 84
-    BitOperations  go to state 85
-
-
-state 55
-
-   57 expr: expr2 .
-   59 expr2: expr2 . MathOperations factor
-
-    ADD  shift, and go to state 86
-    SUB  shift, and go to state 87
-
-    $default  reduce using rule 57 (expr)
-
-    MathOperations  go to state 88
-
-
-state 56
-
-   60 expr2: term .
-   61 term: term . MUL factor
-   62     | term . DIV factor
-
-    MUL  shift, and go to state 89
-    DIV  shift, and go to state 90
-
-    $default  reduce using rule 60 (expr2)
-
-
-state 57
-
-   63 term: factor .
-
-    $default  reduce using rule 63 (term)
-
-
-state 58
-
-   31 multipledeclarations: COMMA variable .
-   32                     | COMMA variable . multipledeclarations
-
-    COMMA  shift, and go to state 31
-
-    COMMA     [reduce using rule 31 (multipledeclarations)]
-    $default  reduce using rule 31 (multipledeclarations)
-
-    multipledeclarations  go to state 91
-
-
-state 59
-
-    4 function: type variable OP argListOpt CP OB line . CB
-
-    CB  shift, and go to state 92
-
-
-state 60
-
-   26 commondeclarations: CONST type variable ASSIGN number .
-
-    $default  reduce using rule 26 (commondeclarations)
-
-
-state 61
-
-   27 commondeclarations: CONST type variable ASSIGN string .
-
-    $default  reduce using rule 27 (commondeclarations)
-
-
-state 62
-
-   65 factor: variable .
-
-    $default  reduce using rule 65 (factor)
-
-
-state 63
-
-    9 ReturnStmt: RETURN expr .
-   56 expr: expr . BitOperations factor
-
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
-
-    $default  reduce using rule 9 (ReturnStmt)
-
-    BitOperations  go to state 85
-
-
-state 64
-
-   56 expr: expr . BitOperations factor
-   66 factor: OP expr . CP
-
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
-    CP          shift, and go to state 93
-
-    BitOperations  go to state 85
-
-
-state 65
-
-    5 function: VOID variable OP argListOpt CP OB line CB .
-
-    $default  reduce using rule 5 (function)
-
-
-state 66
-
-   19 statements: variable ASSIGN . string
-   20           | variable ASSIGN . expr
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    EXPCHAR     shift, and go to state 33
-    EXPSTR      shift, and go to state 34
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    variable  go to state 62
-    BOOLEANS  go to state 50
-    number    go to state 53
-    string    go to state 94
-    expr      go to state 95
-    expr2     go to state 55
-    term      go to state 56
-    factor    go to state 57
-
-
-state 67
-
-   21 statements: variable INC .
-
-    $default  reduce using rule 21 (statements)
-
-
-state 68
-
-   22 statements: variable DEC .
-
-    $default  reduce using rule 22 (statements)
-
-
-state 69
-
-    2 line: statements SEMICOLON .
-    3     | statements SEMICOLON . line
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    CHAR        shift, and go to state 1
-    INT         shift, and go to state 2
-    FLOAT       shift, and go to state 3
-    STRING      shift, and go to state 4
-    RETURN      shift, and go to state 40
-    BOOL        shift, and go to state 6
-    CONST       shift, and go to state 16
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    $default  reduce using rule 2 (line)
-
-    line                go to state 96
-    ReturnStmt          go to state 45
-    type                go to state 18
-    variable            go to state 46
-    statements          go to state 47
-    commondeclarations  go to state 48
-    multiplearguments   go to state 49
-    BOOLEANS            go to state 50
-    multipleConditions  go to state 51
-    condition           go to state 52
-    number              go to state 53
-    expr                go to state 54
-    expr2               go to state 55
-    term                go to state 56
-    factor              go to state 57
-
-
-state 70
-
-   18 statements: multiplearguments ASSIGN . expr
-   28 commondeclarations: multiplearguments ASSIGN . string
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    EXPCHAR     shift, and go to state 33
-    EXPSTR      shift, and go to state 34
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    variable  go to state 62
-    BOOLEANS  go to state 50
-    number    go to state 53
-    string    go to state 35
-    expr      go to state 97
-    expr2     go to state 55
-    term      go to state 56
-    factor    go to state 57
-
-
-state 71
-
-   48 logicals: AND .
-
-    $default  reduce using rule 48 (logicals)
-
-
-state 72
-
-   49 logicals: OR .
-
-    $default  reduce using rule 49 (logicals)
-
-
-state 73
-
-   46 multipleConditions: condition logicals . multipleConditions
-
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
-
-    variable            go to state 62
-    BOOLEANS            go to state 50
-    multipleConditions  go to state 98
-    condition           go to state 52
-    number              go to state 53
-    expr                go to state 54
-    expr2               go to state 55
-    term                go to state 56
-    factor              go to state 57
-
-
-state 74
-
-   38 Equals: EQ .
-
-    $default  reduce using rule 38 (Equals)
-
-
-state 75
-
-   35 comparsions: LE .
-
-    $default  reduce using rule 35 (comparsions)
-
-
-state 76
-
-   34 comparsions: GE .
-
-    $default  reduce using rule 34 (comparsions)
-
-
-state 77
-
-   36 comparsions: L .
-
-    $default  reduce using rule 36 (comparsions)
-
-
-state 78
-
-   37 comparsions: G .
+   37 comparsions: GE .
 
     $default  reduce using rule 37 (comparsions)
 
 
+state 50
+
+   39 comparsions: L .
+
+    $default  reduce using rule 39 (comparsions)
+
+
+state 51
+
+   40 comparsions: G .
+
+    $default  reduce using rule 40 (comparsions)
+
+
+state 52
+
+   42 Equals: NEQ .
+
+    $default  reduce using rule 42 (Equals)
+
+
+state 53
+
+   43 BitOperations: XOR .
+
+    $default  reduce using rule 43 (BitOperations)
+
+
+state 54
+
+   45 BitOperations: BitwiseAnd .
+
+    $default  reduce using rule 45 (BitOperations)
+
+
+state 55
+
+   44 BitOperations: BitwiseOR .
+
+    $default  reduce using rule 44 (BitOperations)
+
+
+state 56
+
+   50 condition: expr comparsions . expr
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    variable  go to state 32
+    BOOLEANS  go to state 23
+    number    go to state 26
+    expr      go to state 77
+    expr2     go to state 28
+    term      go to state 29
+    factor    go to state 30
+
+
+state 57
+
+   36 comparsions: Equals .
+
+    $default  reduce using rule 36 (comparsions)
+
+
+state 58
+
+   59 expr: expr BitOperations . factor
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+
+    variable  go to state 32
+    number    go to state 26
+    factor    go to state 78
+
+
+state 59
+
+   57 MathOperations: ADD .
+
+    $default  reduce using rule 57 (MathOperations)
+
+
+state 60
+
+   58 MathOperations: SUB .
+
+    $default  reduce using rule 58 (MathOperations)
+
+
+state 61
+
+   62 expr2: expr2 MathOperations . factor
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+
+    variable  go to state 32
+    number    go to state 26
+    factor    go to state 79
+
+
+state 62
+
+   64 term: term MUL . factor
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+
+    variable  go to state 32
+    number    go to state 26
+    factor    go to state 80
+
+
+state 63
+
+   65 term: term DIV . factor
+
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    OP          shift, and go to state 12
+
+    variable  go to state 32
+    number    go to state 26
+    factor    go to state 81
+
+
+state 64
+
+    8 Function: VOID variable OP . argListOpt CP OB line CB
+
+    CHAR    shift, and go to state 4
+    INT     shift, and go to state 5
+    FLOAT   shift, and go to state 6
+    STRING  shift, and go to state 7
+    BOOL    shift, and go to state 10
+
+    $default  reduce using rule 11 (argListOpt)
+
+    argListOpt  go to state 82
+    type        go to state 83
+
+
+state 65
+
+   29 commondeclarations: CONST type variable . ASSIGN number
+   30                   | CONST type variable . ASSIGN string
+
+    ASSIGN  shift, and go to state 84
+
+
+state 66
+
+   69 factor: OP expr CP .
+
+    $default  reduce using rule 69 (factor)
+
+
+state 67
+
+   34 multipledeclarations: COMMA . variable
+   35                     | COMMA . variable multipledeclarations
+
+    IDENTIFIER  shift, and go to state 1
+
+    variable  go to state 85
+
+
+state 68
+
+    7 Function: type variable OP . argListOpt CP OB line CB
+
+    CHAR    shift, and go to state 4
+    INT     shift, and go to state 5
+    FLOAT   shift, and go to state 6
+    STRING  shift, and go to state 7
+    BOOL    shift, and go to state 10
+
+    $default  reduce using rule 11 (argListOpt)
+
+    argListOpt  go to state 86
+    type        go to state 83
+
+
+state 69
+
+   33 multiplearguments: type variable multipledeclarations .
+
+    $default  reduce using rule 33 (multiplearguments)
+
+
+state 70
+
+   56 string: EXPCHAR .
+
+    $default  reduce using rule 56 (string)
+
+
+state 71
+
+   55 string: EXPSTR .
+
+    $default  reduce using rule 55 (string)
+
+
+state 72
+
+   22 statements: variable ASSIGN string .
+
+    $default  reduce using rule 22 (statements)
+
+
+state 73
+
+   23 statements: variable ASSIGN expr .
+   59 expr: expr . BitOperations factor
+
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+
+    $default  reduce using rule 23 (statements)
+
+    BitOperations  go to state 58
+
+
+state 74
+
+   31 commondeclarations: multiplearguments ASSIGN string .
+
+    $default  reduce using rule 31 (commondeclarations)
+
+
+state 75
+
+   21 statements: multiplearguments ASSIGN expr .
+   59 expr: expr . BitOperations factor
+
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+
+    $default  reduce using rule 21 (statements)
+
+    BitOperations  go to state 58
+
+
+state 76
+
+   49 multipleConditions: condition logicals multipleConditions .
+
+    $default  reduce using rule 49 (multipleConditions)
+
+
+state 77
+
+   50 condition: expr comparsions expr .
+   59 expr: expr . BitOperations factor
+
+    XOR         shift, and go to state 53
+    BitwiseAnd  shift, and go to state 54
+    BitwiseOR   shift, and go to state 55
+
+    $default  reduce using rule 50 (condition)
+
+    BitOperations  go to state 58
+
+
+state 78
+
+   59 expr: expr BitOperations factor .
+
+    $default  reduce using rule 59 (expr)
+
+
 state 79
 
-   39 Equals: NEQ .
+   62 expr2: expr2 MathOperations factor .
 
-    $default  reduce using rule 39 (Equals)
+    $default  reduce using rule 62 (expr2)
 
 
 state 80
 
-   40 BitOperations: XOR .
+   64 term: term MUL factor .
 
-    $default  reduce using rule 40 (BitOperations)
+    $default  reduce using rule 64 (term)
 
 
 state 81
 
-   42 BitOperations: BitwiseAnd .
+   65 term: term DIV factor .
 
-    $default  reduce using rule 42 (BitOperations)
+    $default  reduce using rule 65 (term)
 
 
 state 82
 
-   41 BitOperations: BitwiseOR .
+    8 Function: VOID variable OP argListOpt . CP OB line CB
 
-    $default  reduce using rule 41 (BitOperations)
+    CP  shift, and go to state 87
 
 
 state 83
 
-   47 condition: expr comparsions . expr
+    9 argListOpt: type . variable
+   10           | type . variable COMMA argListOpt
 
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-    FALSE       shift, and go to state 42
-    TRUE        shift, and go to state 43
+    IDENTIFIER  shift, and go to state 1
 
-    variable  go to state 62
-    BOOLEANS  go to state 50
-    number    go to state 53
-    expr      go to state 99
-    expr2     go to state 55
-    term      go to state 56
-    factor    go to state 57
+    variable  go to state 88
 
 
 state 84
 
-   33 comparsions: Equals .
+   29 commondeclarations: CONST type variable ASSIGN . number
+   30                   | CONST type variable ASSIGN . string
 
-    $default  reduce using rule 33 (comparsions)
+    NUM      shift, and go to state 2
+    DECIMAL  shift, and go to state 3
+    EXPCHAR  shift, and go to state 70
+    EXPSTR   shift, and go to state 71
+
+    number  go to state 89
+    string  go to state 90
 
 
 state 85
 
-   56 expr: expr BitOperations . factor
+   34 multipledeclarations: COMMA variable .
+   35                     | COMMA variable . multipledeclarations
 
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
+    COMMA  shift, and go to state 67
 
-    variable  go to state 62
-    number    go to state 53
-    factor    go to state 100
+    $default  reduce using rule 34 (multipledeclarations)
+
+    multipledeclarations  go to state 91
 
 
 state 86
 
-   54 MathOperations: ADD .
+    7 Function: type variable OP argListOpt . CP OB line CB
 
-    $default  reduce using rule 54 (MathOperations)
+    CP  shift, and go to state 92
 
 
 state 87
 
-   55 MathOperations: SUB .
+    8 Function: VOID variable OP argListOpt CP . OB line CB
 
-    $default  reduce using rule 55 (MathOperations)
+    OB  shift, and go to state 93
 
 
 state 88
 
-   59 expr2: expr2 MathOperations . factor
+    9 argListOpt: type variable .
+   10           | type variable . COMMA argListOpt
 
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
+    COMMA  shift, and go to state 94
 
-    variable  go to state 62
-    number    go to state 53
-    factor    go to state 101
+    $default  reduce using rule 9 (argListOpt)
 
 
 state 89
 
-   61 term: term MUL . factor
+   29 commondeclarations: CONST type variable ASSIGN number .
 
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-
-    variable  go to state 62
-    number    go to state 53
-    factor    go to state 102
+    $default  reduce using rule 29 (commondeclarations)
 
 
 state 90
 
-   62 term: term DIV . factor
+   30 commondeclarations: CONST type variable ASSIGN string .
 
-    IDENTIFIER  shift, and go to state 10
-    NUM         shift, and go to state 38
-    DECIMAL     shift, and go to state 39
-    OP          shift, and go to state 41
-
-    variable  go to state 62
-    number    go to state 53
-    factor    go to state 103
+    $default  reduce using rule 30 (commondeclarations)
 
 
 state 91
 
-   32 multipledeclarations: COMMA variable multipledeclarations .
+   35 multipledeclarations: COMMA variable multipledeclarations .
 
-    $default  reduce using rule 32 (multipledeclarations)
+    $default  reduce using rule 35 (multipledeclarations)
 
 
 state 92
 
-    4 function: type variable OP argListOpt CP OB line CB .
+    7 Function: type variable OP argListOpt CP . OB line CB
 
-    $default  reduce using rule 4 (function)
+    OB  shift, and go to state 95
 
 
 state 93
 
-   66 factor: OP expr CP .
+    8 Function: VOID variable OP argListOpt CP OB . line CB
 
-    $default  reduce using rule 66 (factor)
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    line                go to state 96
+    ReturnStmt          go to state 17
+    type                go to state 97
+    variable            go to state 19
+    statements          go to state 98
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
 
 
 state 94
 
-   19 statements: variable ASSIGN string .
+   10 argListOpt: type variable COMMA . argListOpt
 
-    $default  reduce using rule 19 (statements)
+    CHAR    shift, and go to state 4
+    INT     shift, and go to state 5
+    FLOAT   shift, and go to state 6
+    STRING  shift, and go to state 7
+    BOOL    shift, and go to state 10
+
+    $default  reduce using rule 11 (argListOpt)
+
+    argListOpt  go to state 99
+    type        go to state 83
 
 
 state 95
 
-   20 statements: variable ASSIGN expr .
-   56 expr: expr . BitOperations factor
+    7 Function: type variable OP argListOpt CP OB . line CB
 
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
 
-    $default  reduce using rule 20 (statements)
-
-    BitOperations  go to state 85
+    line                go to state 100
+    ReturnStmt          go to state 17
+    type                go to state 97
+    variable            go to state 19
+    statements          go to state 98
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
 
 
 state 96
 
-    3 line: statements SEMICOLON line .
+    8 Function: VOID variable OP argListOpt CP OB line . CB
 
-    $default  reduce using rule 3 (line)
+    CB  shift, and go to state 101
 
 
 state 97
 
-   18 statements: multiplearguments ASSIGN expr .
-   56 expr: expr . BitOperations factor
+   32 multiplearguments: type . variable
+   33                  | type . variable multipledeclarations
 
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
+    IDENTIFIER  shift, and go to state 1
 
-    $default  reduce using rule 18 (statements)
-
-    BitOperations  go to state 85
+    variable  go to state 102
 
 
 state 98
 
-   46 multipleConditions: condition logicals multipleConditions .
+    5 line: statements . SEMICOLON
+    6     | statements . SEMICOLON line
 
-    $default  reduce using rule 46 (multipleConditions)
+    SEMICOLON  shift, and go to state 103
 
 
 state 99
 
-   47 condition: expr comparsions expr .
-   56 expr: expr . BitOperations factor
+   10 argListOpt: type variable COMMA argListOpt .
 
-    XOR         shift, and go to state 80
-    BitwiseAnd  shift, and go to state 81
-    BitwiseOR   shift, and go to state 82
-
-    $default  reduce using rule 47 (condition)
-
-    BitOperations  go to state 85
+    $default  reduce using rule 10 (argListOpt)
 
 
 state 100
 
-   56 expr: expr BitOperations factor .
+    7 Function: type variable OP argListOpt CP OB line . CB
 
-    $default  reduce using rule 56 (expr)
+    CB  shift, and go to state 104
 
 
 state 101
 
-   59 expr2: expr2 MathOperations factor .
+    8 Function: VOID variable OP argListOpt CP OB line CB .
 
-    $default  reduce using rule 59 (expr2)
+    $default  reduce using rule 8 (Function)
 
 
 state 102
 
-   61 term: term MUL factor .
+   32 multiplearguments: type variable .
+   33                  | type variable . multipledeclarations
 
-    $default  reduce using rule 61 (term)
+    COMMA  shift, and go to state 67
+
+    $default  reduce using rule 32 (multiplearguments)
+
+    multipledeclarations  go to state 69
 
 
 state 103
 
-   62 term: term DIV factor .
+    5 line: statements SEMICOLON .
+    6     | statements SEMICOLON . line
 
-    $default  reduce using rule 62 (term)
+    IDENTIFIER  shift, and go to state 1
+    NUM         shift, and go to state 2
+    DECIMAL     shift, and go to state 3
+    CHAR        shift, and go to state 4
+    INT         shift, and go to state 5
+    FLOAT       shift, and go to state 6
+    STRING      shift, and go to state 7
+    RETURN      shift, and go to state 9
+    BOOL        shift, and go to state 10
+    CONST       shift, and go to state 11
+    OP          shift, and go to state 12
+    FALSE       shift, and go to state 13
+    TRUE        shift, and go to state 14
+
+    $default  reduce using rule 5 (line)
+
+    line                go to state 105
+    ReturnStmt          go to state 17
+    type                go to state 97
+    variable            go to state 19
+    statements          go to state 98
+    commondeclarations  go to state 21
+    multiplearguments   go to state 22
+    BOOLEANS            go to state 23
+    multipleConditions  go to state 24
+    condition           go to state 25
+    number              go to state 26
+    expr                go to state 27
+    expr2               go to state 28
+    term                go to state 29
+    factor              go to state 30
+
+
+state 104
+
+    7 Function: type variable OP argListOpt CP OB line CB .
+
+    $default  reduce using rule 7 (Function)
+
+
+state 105
+
+    6 line: statements SEMICOLON line .
+
+    $default  reduce using rule 6 (line)
