@@ -1,10 +1,14 @@
-int fun(int a,int b){
+void fun(int a,int b){
     int a,c=5+3;
     return c;
-
 }
+int a=4,b;
+int a,b;
+int a,b=4;
+int a=4,b=4;
 int a;
 int b;
+const int a=5,b=6;
 int main(){
 int a,d=8+5;
 variable=7;

@@ -1,26 +1,25 @@
 
-  
-%{
-	void yyerror (char const *s);
+%{	
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
 	int yylex();
+	void yyerror (char *s);
 	int typeno;
 %}
 %union {
   struct info{ 
-		char* name;
+		char name[10];
         char* value;
 		int quadvalue;
 		char * quad;
-	    char  variable;
+	    char  IDENTIFIER;
 		char * string;    
         int  type;
     }ourinfo;
 }  
 
-%start program
+%start block
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
@@ -40,118 +39,145 @@
 
 %%
 
-program
-	: Function
-	| statements
-	| Function program
-	| statements program
+block
+	: line
+	| line block
+	| OB line CB // figure it out
+	| OB line CB block
+	| OB line block CB
+	| OB line block CB block
 	;
 
 
 
 line
 	: statements SEMICOLON
-	| statements SEMICOLON line
+	| function_decl
+	| function_def
 	;
 
-Function
-	: type variable OP argListOpt CP OB line CB
-	| VOID variable OP argListOpt CP OB line CB
+statements 
+		: var_declaration
+		| const_declaration 
+		| identifier_assignment
+		| variable INC
+		| variable DEC
+		| multiple_conditions // TODO multipleConditions must be inside if block
+		| return_stmt
+		;
+
+var_declaration
+	: type variable var_assignment
+	| type variable var_assignment multiple_var_declarations
 	;
 
-argListOpt
-	: type variable
-	| type variable COMMA argListOpt
-	| 
-	;
-ReturnStmt
-	: RETURN expr 
-	| RETURN
+var_assignment
+	: /*empty*/  //for declaring variables without assigning it
+	| ASSIGN string  
+    | ASSIGN expr
 	;
 
+multiple_var_declarations
+	: COMMA variable var_assignment
+	| COMMA variable var_assignment multiple_var_declarations
+	;
+
+
+const_declaration
+	: CONST type variable const_assignment
+	| CONST type variable const_assignment multiple_const_declarations
+	;
+
+multiple_const_declarations
+	: COMMA variable const_assignment
+	| COMMA variable const_assignment multiple_const_declarations
+	;
+
+const_assignment
+	: ASSIGN number
+	| ASSIGN string
+	;
+
+identifier_assignment
+	: variable ASSIGN string
+	| variable ASSIGN expr
+	;
+
+
+ob: OB {/* handle beginning of new scope */ printf("new scope\n");};
+
+function_decl
+	: type variable OP func_params CP SEMICOLON //no default values for arguments
+	| VOID variable OP func_params CP SEMICOLON
+	;
+
+function_def
+	: type variable OP func_params CP ob block CB
+	| VOID variable OP func_params CP ob block CB
+	;
+
+
+func_params 
+	: 	/*empty*/  // for functions that have no parameters
+	| 	type variable 
+	| 	type variable multiple_parameters
+	;
+
+multiple_parameters
+	: COMMA type variable 
+	| COMMA type variable multiple_parameters ;
 
 type 
-	: INT   {  $<ourinfo>1.type = 2 ; $<ourinfo>$=$<ourinfo>1; typeno=2;printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);}
-	| CHAR  {  $<ourinfo>1.type = 1 ; $<ourinfo>$=$<ourinfo>1; typeno=1}
-	| FLOAT {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3}
-	| STRING {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=4} 
-	| BOOL {  $<ourinfo>1.type = 5 ; $<ourinfo>$=$<ourinfo>1; typeno=5} 
-	;
-
-
-ReturnType
-	: VOID
-	| type
+	: INT  {  
+			$<ourinfo>1.type = 2 ; 
+			$<ourinfo>$=$<ourinfo>1; 
+			typeno=2;
+			printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);
+		}
+	| CHAR {  
+			$<ourinfo>1.type = 1 ; 
+			$<ourinfo>$=$<ourinfo>1; 
+			typeno=1;
+		}
+	| FLOAT   {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3;}
+	| STRING  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=4;}
+	| BOOL    {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=5;} 
 	;
 
 variable
-	: IDENTIFIER {  $<ourinfo>$.name=$<ourinfo>$.name; $<ourinfo>$.type=typeno;  printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {  strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
 	;
-
-
-argument 
-	: type variable
-	| variable
-	;
-
-
-statements 
-		: commondeclarations 
-		| multiplearguments ASSIGN expr	
-		| variable ASSIGN string
-		| variable ASSIGN expr
-		| variable INC
-		| variable DEC
-		| multipleConditions // TODO multipleConditions must be inside if block
-		| ReturnStmt
-		;
-
-commondeclarations
-	: multiplearguments 
-	| CONST type variable ASSIGN number 
-	| CONST type variable ASSIGN string 
-	| multiplearguments ASSIGN string  
-	;
-
-multiplearguments
-	: type variable
-	| type variable multipledeclarations
-	;
-
-multipledeclarations
-	: COMMA variable
-	| COMMA variable multipledeclarations
-	;
-
+	
 comparsions
-	: Equals
+	: equals
 	| GE 
 	| LE 
 	| L 
 	| G 
 	;
 
-Equals
+equals
 	: EQ
 	| NEQ
 	;
-BitOperations
+
+bit_operations
 	: XOR
 	| BitwiseOR
 	| BitwiseAnd
 	;
 
-BOOLEANS
+booleans
 	: TRUE
 	| FALSE
 	;
 
-multipleConditions
+multiple_conditions
 	: condition
-	| condition logicals multipleConditions
+	| condition logicals multiple_conditions
 	;
 
-condition //(o/p of function or variable == bool )eq boolean 
+condition //(o/p of function or IDENTIFIER == bool )eq boolean 
 	: expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
 	;
 
@@ -170,20 +196,20 @@ string
 	| EXPCHAR 
 	;
 
-MathOperations
+math_operations
 	: ADD 
 	| SUB
 	;
 
 
 expr 
-    : expr BitOperations factor
+    : expr bit_operations factor
 	| expr2
-	| BOOLEANS
+	| booleans
 	;
 
 expr2
-	: expr2  MathOperations factor
+	: expr2  math_operations factor
 	| term 
 	;
 
@@ -195,23 +221,29 @@ term
 
 factor
 	: number
-	| variable //a= a+3
+	| IDENTIFIER //a= a+3
 	| OP expr CP
 	;
 
+return_stmt
+	: RETURN expr 
+	| RETURN
+	;
 	
 
 
 %%
 
-
-
-
-void yyerror (char const *s) {
-	fprintf (stderr, "%s\n", s);
+extern FILE *yyin;
+void yyerror(char *s){
+    extern int yylineno;
+    // fprintf(stderr,"At line %s %d ",s,yylineno);  
+    fprintf(stderr,"%s",s);  
 }
 
-extern FILE *yyin;
+
+
+
 
 int main()
 {
@@ -221,6 +253,7 @@ int main()
 	
 	fclose(yyin);
 	
+
 	return 0;
 }
 

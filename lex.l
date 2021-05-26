@@ -6,6 +6,7 @@
 	#include<string.h>
     extern char yyval;
 %}
+%option yylineno
 
 alpha [a-zA-Z]
 digit [0-9]
@@ -51,8 +52,7 @@ character \'[^'\n]\'
 "if"	return IF;
 "then"	return THEN;
 
-
-{alpha}({alpha}|{digit})* {printf("IDENTIFIER\n");return IDENTIFIER;}
+{alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
 {digit}+                  {return NUM;}
 [0-9]+\.[0-9]+            {return DECIMAL;}
 {str}                     {printf("stringg\n");return EXPSTR;}
@@ -60,7 +60,7 @@ character \'[^'\n]\'
 
 
 [ \t] ;
-[\n] {printf("found newline\n");}
+[\n] {++yylineno;}
 . ;
 
 %%
