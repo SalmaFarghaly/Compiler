@@ -51,6 +51,13 @@ character \'[^'\n]\'
 "const"	return CONST;
 "if"	return IF;
 "then"	return THEN;
+"else" return ELSE;
+"while" return WHILE;
+"repeat" return REPEAT;
+"until" return UNTIL;
+"for" return FOR;
+"switch" return SWITCH;
+"case" return CASE;
 
 {alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
 {digit}+                  {return NUM;}

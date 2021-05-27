@@ -19,7 +19,7 @@
     }ourinfo;
 }  
 
-%start block
+%start program
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
@@ -31,7 +31,9 @@
 %token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
 %token  XOR BitwiseAnd BitwiseOR
-%token SEMICOLON COMMA IF THEN CONST
+%token SEMICOLON COMMA 
+%token IF THEN CONST ELSE 
+%token WHILE REPEAT UNTIL FOR SWITCH CASE
 %token  OP CP OB CB
 %token FALSE TRUE
 
@@ -39,31 +41,38 @@
 
 %%
 
-block
-	: line
-	| line block
-	| OB line CB // figure it out
-	| OB line CB block
-	| OB line block CB
-	| OB line block CB block
+program
+	: braced_block
+	//| unbraced_block
+	//| unbraced_block program
+	| braced_block program
 	;
 
 
+//unbraced_block
+//	: IF
+//	;
 
-line
-	: statements SEMICOLON
-	| function_decl
-	| function_def
+braced_block
+	: OB statements CB
 	;
 
-statements 
-		: var_declaration
-		| const_declaration 
-		| identifier_assignment
-		| variable INC
-		| variable DEC
-		| multiple_conditions // TODO multipleConditions must be inside if block
-		| return_stmt
+statements
+	: statement
+	| statement statements
+	;
+
+statement 
+		: var_declaration SEMICOLON
+		| const_declaration SEMICOLON
+		| identifier_assignment SEMICOLON
+		| variable INC SEMICOLON
+		| variable DEC SEMICOLON
+		| multiple_conditions SEMICOLON // TODO multipleConditions must be inside if block
+		| function_decl
+		| function_def
+		| if_stmt
+		| while_loop
 		;
 
 var_declaration
@@ -78,7 +87,7 @@ var_assignment
 	;
 
 multiple_var_declarations
-	: COMMA variable var_assignment
+	: COMMA variable 
 	| COMMA variable var_assignment multiple_var_declarations
 	;
 
@@ -112,20 +121,28 @@ function_decl
 	;
 
 function_def
-	: type variable OP func_params CP ob block CB
-	| VOID variable OP func_params CP ob block CB
+	: type variable OP func_params CP braced_block
+	| VOID variable OP func_params CP braced_block
 	;
 
 
 func_params 
 	: 	/*empty*/  // for functions that have no parameters
-	| 	type variable 
+	| 	type variable  
 	| 	type variable multiple_parameters
 	;
 
 multiple_parameters
 	: COMMA type variable 
 	| COMMA type variable multiple_parameters ;
+
+if_stmt
+	: IF OP condition CP braced_block
+	| IF OP condition CP braced_block ELSE braced_block
+	;
+
+while_loop
+	: WHILE OP condition CP ob 
 
 type 
 	: INT  {  
@@ -224,12 +241,12 @@ factor
 	| IDENTIFIER //a= a+3
 	| OP expr CP
 	;
-
+/*
 return_stmt
 	: RETURN expr 
 	| RETURN
 	;
-	
+*/	
 
 
 %%
@@ -253,7 +270,6 @@ int main()
 	
 	fclose(yyin);
 	
-
 	return 0;
 }
 
