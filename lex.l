@@ -43,6 +43,7 @@ character \'[^'\n]\'
 "double"    return DOUBLE; 
 "bool"      return BOOL;
 ";"     return SEMICOLON;
+":"		return COLON;
 ","     return COMMA;
 "("     return OP;
 ")"     return CP;
@@ -53,11 +54,13 @@ character \'[^'\n]\'
 "then"	return THEN;
 "else" return ELSE;
 "while" return WHILE;
-"repeat" return REPEAT;
+"do" return DO;
 "until" return UNTIL;
 "for" return FOR;
 "switch" return SWITCH;
 "case" return CASE;
+"default" return DEFAULT;
+
 
 {alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
 {digit}+                  {return NUM;}
