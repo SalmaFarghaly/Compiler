@@ -20,6 +20,8 @@
 }  
 
 %start program
+
+
 %token  <ourinfo>IDENTIFIER 
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
@@ -31,30 +33,27 @@
 %token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
 %token  XOR BitwiseAnd BitwiseOR
-%token SEMICOLON COMMA 
+%token SEMICOLON COMMA COLON
 %token IF THEN CONST ELSE 
-%token WHILE REPEAT UNTIL FOR SWITCH CASE
-%token  OP CP OB CB
+%token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
+%token  OP CP OB CB DBL_FORWARD_SLASH
 %token FALSE TRUE
 
 
 
 %%
 
-program
-	: braced_block
-	//| unbraced_block
-	//| unbraced_block program
-	| braced_block program
+program															// Note that an empty file or file with comments only will not parse successfully
+	: braced_block	{printf("Reduced to braced_block\n");}
+	| statement	{printf("Reduced to statement\n");}
+	| statement program	{printf("Reduced to statement . program\n");}
+	| braced_block program	{printf("Reduced to braced_block . program\n");}
 	;
 
 
-//unbraced_block
-//	: IF
-//	;
-
 braced_block
-	: OB statements CB
+	: OB CB
+	| OB statements CB
 	;
 
 statements
@@ -62,18 +61,53 @@ statements
 	| statement statements
 	;
 
-statement 
-		: var_declaration SEMICOLON
-		| const_declaration SEMICOLON
-		| identifier_assignment SEMICOLON
-		| variable INC SEMICOLON
-		| variable DEC SEMICOLON
-		| multiple_conditions SEMICOLON // TODO multipleConditions must be inside if block
-		| function_decl
-		| function_def
-		| if_stmt
-		| while_loop
-		;
+statement
+	: other_statements SEMICOLON
+	| func_statements
+	| ctrl_statements
+	| return_stmt
+	| break_stmt // It must only be allowed inside loops and switch cases. 
+	;
+
+
+other_statements
+	: expression_statements
+	| declaration_statements
+	;
+
+return_stmt
+	: RETURN SEMICOLON	{printf("reduced to return_stmt\n");}
+	| RETURN expr SEMICOLON
+	;
+
+break_stmt
+	: BREAK SEMICOLON 
+	;
+
+expression_statements
+	: identifier_assignment
+	| variable INC
+	| variable DEC
+	| multiple_conditions // TODO multipleConditions must be inside if block
+	;
+
+declaration_statements
+	: var_declaration
+	| const_declaration
+	;
+
+func_statements
+	: func_decl
+	| func_def
+	;
+
+ctrl_statements
+	: if_stmt
+	| while_loop
+	| do_while
+	| for_loop
+	| switch_stmt
+	;
 
 var_declaration
 	: type variable var_assignment
@@ -87,7 +121,7 @@ var_assignment
 	;
 
 multiple_var_declarations
-	: COMMA variable 
+	: COMMA variable var_assignment
 	| COMMA variable var_assignment multiple_var_declarations
 	;
 
@@ -115,35 +149,84 @@ identifier_assignment
 
 ob: OB {/* handle beginning of new scope */ printf("new scope\n");};
 
-function_decl
+
+// Function Declaration and Definition
+func_decl
 	: type variable OP func_params CP SEMICOLON //no default values for arguments
 	| VOID variable OP func_params CP SEMICOLON
 	;
 
-function_def
+func_def
 	: type variable OP func_params CP braced_block
 	| VOID variable OP func_params CP braced_block
 	;
-
-
 func_params 
 	: 	/*empty*/  // for functions that have no parameters
 	| 	type variable  
-	| 	type variable multiple_parameters
+	| 	type variable multiple_func_params
 	;
 
-multiple_parameters
+multiple_func_params
 	: COMMA type variable 
-	| COMMA type variable multiple_parameters ;
+	| COMMA type variable multiple_func_params ;
+
+
+// Function Calls
+func_call
+	: variable OP func_call_params CP 
+	;
+
+func_call_params
+	: 	/*empty*/  // for functions that have no parameters
+	| 	expr  
+	| 	expr multiple_func_call_params
+	;
+
+multiple_func_call_params
+	: COMMA expr 
+	| COMMA expr multiple_func_call_params ;
+
 
 if_stmt
-	: IF OP condition CP braced_block
-	| IF OP condition CP braced_block ELSE braced_block
+	: IF OP other_statements CP braced_block {printf("Reduced to if statement\n");}
+	| IF OP other_statements CP braced_block ELSE braced_block {printf("Reduced to if else\n");}
 	;
 
 while_loop
-	: WHILE OP condition CP ob 
+	: WHILE OP other_statements CP braced_block
+	;
 
+do_while
+	: DO braced_block WHILE OP other_statements CP SEMICOLON
+	;
+
+
+for_var_declaration: | var_declaration;
+for_multiple_conditions: | multiple_conditions;
+for_expression_statements: | expression_statements;
+
+for_loop
+	: FOR OP for_var_declaration SEMICOLON for_multiple_conditions SEMICOLON for_expression_statements CP braced_block
+	;
+
+
+multiple_cases
+	: case
+	| case multiple_cases
+	;
+
+case
+	: CASE expr COLON braced_block // our own assumption
+	| DEFAULT COLON braced_block	// Restricting no. of default statements to one will be handled later
+	| CASE expr COLON statements 
+	| DEFAULT COLON statements
+
+
+
+
+switch_stmt
+	: SWITCH OP expr CP ob multiple_cases CB // Verify using expr here. Check increment/decrement statements
+	;
 type 
 	: INT  {  
 			$<ourinfo>1.type = 2 ; 
@@ -194,8 +277,9 @@ multiple_conditions
 	| condition logicals multiple_conditions
 	;
 
-condition //(o/p of function or IDENTIFIER == bool )eq boolean 
-	: expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
+condition //(o/p of function or IDENTIFIER == bool )eq boolean
+	: expr
+	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
 	;
 
 logicals
@@ -218,17 +302,14 @@ math_operations
 	| SUB
 	;
 
-
 expr 
-    : expr bit_operations factor
-	| expr2
+    : expr bit_operations term
+	| expr math_operations term
+	| OP expr CP
 	| booleans
+	| term
 	;
 
-expr2
-	: expr2  math_operations factor
-	| term 
-	;
 
 term
 	: term MUL factor 
@@ -238,15 +319,10 @@ term
 
 factor
 	: number
-	| IDENTIFIER //a= a+3
-	| OP expr CP
+	| variable //a= a+3
+	| func_call
 	;
-/*
-return_stmt
-	: RETURN expr 
-	| RETURN
-	;
-*/	
+
 
 
 %%
@@ -266,10 +342,19 @@ int main()
 {
 	yyin=fopen("input.c","r");
 	int yydebug=1;
-	yyparse();
-	
+	int value;
+	value = yyparse();
+
+	if(value == 0){
+		printf("Parsing Successful.\n");
+	}
+	else{
+		printf("Parsing Unsuccessful.\n");
+	}
+	int dummy;
+    scanf("%d", &dummy); 
+
 	fclose(yyin);
-	
 	return 0;
 }
 

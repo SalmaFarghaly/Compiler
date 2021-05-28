@@ -12,6 +12,7 @@ alpha [a-zA-Z]
 digit [0-9]
 str \"[^"\n]*\"
 character \'[^'\n]\'
+comment_str \/\/[^\n]*
 %%
 "-"   return SUB;
 "+"   return ADD;
@@ -43,31 +44,37 @@ character \'[^'\n]\'
 "double"    return DOUBLE; 
 "bool"      return BOOL;
 ";"     return SEMICOLON;
+":"		return COLON;
 ","     return COMMA;
 "("     return OP;
 ")"     return CP;
 "{"     return OB;
 "}"     return CB;
+"//"		return DBL_FORWARD_SLASH;
 "const"	return CONST;
 "if"	return IF;
 "then"	return THEN;
 "else" return ELSE;
 "while" return WHILE;
-"repeat" return REPEAT;
+"do" return DO;
 "until" return UNTIL;
 "for" return FOR;
 "switch" return SWITCH;
 "case" return CASE;
+"default" return DEFAULT;
+"break" return BREAK;
+
+
 
 {alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
 {digit}+                  {return NUM;}
 [0-9]+\.[0-9]+            {return DECIMAL;}
 {str}                     {printf("stringg\n");return EXPSTR;}
 {character}               {return EXPCHAR;}
-
+{comment_str}			{printf("Found a Single Line Comment\n");}
 
 [ \t] ;
-[\n] {++yylineno;}
+[\n] {++yylineno; }
 . ;
 
 %%
