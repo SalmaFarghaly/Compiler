@@ -32,7 +32,7 @@
 %token  ASSIGN
 %token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
-%token  XOR BitwiseAnd BitwiseOR
+%token  XOR BitwiseAnd BitwiseOR NOT
 %token SEMICOLON COMMA COLON
 %token IF THEN CONST ELSE 
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
@@ -88,7 +88,9 @@ expression_statements
 	: identifier_assignment
 	| variable INC
 	| variable DEC
-	| multiple_conditions // TODO multipleConditions must be inside if block
+	| INC variable
+	| DEC variable
+	//| multiple_conditions // TODO multipleConditions must be inside if block
 	;
 
 declaration_statements
@@ -99,6 +101,7 @@ declaration_statements
 func_statements
 	: func_decl
 	| func_def
+	| func_call SEMICOLON
 	;
 
 ctrl_statements
@@ -117,7 +120,7 @@ var_declaration
 var_assignment
 	: /*empty*/  //for declaring variables without assigning it
 	| ASSIGN string  
-    | ASSIGN expr
+    | ASSIGN multiple_conditions
 	;
 
 multiple_var_declarations
@@ -137,13 +140,14 @@ multiple_const_declarations
 	;
 
 const_assignment
-	: ASSIGN number
+	: ASSIGN multiple_conditions
 	| ASSIGN string
+
 	;
 
 identifier_assignment
 	: variable ASSIGN string
-	| variable ASSIGN expr
+	| variable ASSIGN multiple_conditions
 	;
 
 
@@ -188,16 +192,16 @@ multiple_func_call_params
 
 
 if_stmt
-	: IF OP other_statements CP braced_block {printf("Reduced to if statement\n");}
-	| IF OP other_statements CP braced_block ELSE braced_block {printf("Reduced to if else\n");}
+	: IF OP  multiple_conditions CP braced_block {printf("Reduced to if statement\n");}
+	| IF OP  multiple_conditions CP braced_block ELSE braced_block {printf("Reduced to if else\n");}
 	;
 
 while_loop
-	: WHILE OP other_statements CP braced_block
+	: WHILE OP  multiple_conditions CP braced_block
 	;
 
 do_while
-	: DO braced_block WHILE OP other_statements CP SEMICOLON
+	: DO braced_block WHILE OP  multiple_conditions CP SEMICOLON
 	;
 
 
@@ -280,6 +284,9 @@ multiple_conditions
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	: expr
 	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
+	| NOT OP expr logicals expr CP
+	| NOT OP expr comparsions expr CP
+	| NOT variable
 	;
 
 logicals
@@ -304,16 +311,20 @@ math_operations
 
 expr 
     : expr bit_operations term
-	| expr math_operations term
-	| OP expr CP
+	| expr2
 	| booleans
-	| term
+	;
+
+expr2
+	: expr2  math_operations term
+	| term 
 	;
 
 
 term
 	: term MUL factor 
 	| term DIV factor
+	| term REM factor
 	| factor
 	;
 
@@ -321,6 +332,8 @@ factor
 	: number
 	| variable //a= a+3
 	| func_call
+	| NOT func_call
+	| OP expr CP
 	;
 
 

@@ -35,6 +35,7 @@ comment_str \/\/[^\n]*
 "^"   return XOR;
 "|"   return BitwiseOR;
 "&"   return BitwiseAnd;
+"!"   return NOT;
 "char"      return CHAR;
 "int"       return INT;
 "float"     return FLOAT;
