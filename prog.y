@@ -32,19 +32,20 @@
 %token  <ourinfo> DECIMAL 
 %token  <ourinfo> EXPCHAR
 %token  <ourinfo> EXPSTR 
-%token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL
-%token  Equal LessThan_OR_Equal GreaterThan_Or_Equal AND OR LessThan GreaterThan NotEqual
-%token  ASSIGN
+%token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL  
 %token  FUNCNAME
-%token  ADD SUB MUL DIV INC DEC REM
-%token  XOR BitwiseAnd BitwiseOR NOT
-%token SEMICOLON COMMA COLON
+%token  INC DEC 
+%token SEMICOLON COLON
 %token IF THEN CONST ELSE 
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
 %token  OPEN_Parentheses  CLOSED_Parentheses  OPEN_Brackets CLOSED_Brackets DBL_FORWARD_SLASH
-%token FALSE TRUE END
+%token FALSE TRUE 
 
+%left AND OR ADD SUB MUL DIV REM
+%left Equal LessThan_OR_Equal GreaterThan_Or_Equal  LessThan GreaterThan NotEqual
+%left  XOR BitwiseAnd BitwiseOR COMMA
 
+%right NOT ASSIGN
 
 %%
 

@@ -15,3 +15,4 @@
 int a = 0;
 fi(a>b)
     return;
+a = a &b && false;

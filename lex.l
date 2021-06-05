@@ -30,7 +30,6 @@ str \"[^"\n]*\"
 character \'[^'\n]\'
 comment_str \/\/[^\n]*
 %%
-"end" return END;
 "-"   return SUB;
 "+"   return ADD;
 "*"   return MUL;
