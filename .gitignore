@@ -3,3 +3,7 @@
 *.yy.c
 *.exe
 *.output
+lex(1).l
+prog(1).y
+.vs
+new.c
