@@ -361,7 +361,8 @@ void yyerror(const char *s)
 
 int main()
 {
-	yyin=fopen("error1.c","r");
+
+	yyin=fopen("input.c","r");
 	//free(lineptr);
 
 
