@@ -36,14 +36,14 @@ comment_str \/\/[^\n]*
 "*"   return MUL;
 "/"   return DIV;
 "%"   return REM;
-">="  return GE;
-"<="  return LE;
-"=="  return EQ;
+">="  return GreaterThan_Or_Equal;
+"<="  return LessThan_OR_Equal;
+"=="  return Equal;
 "false" { printf("false\n");return FALSE;}
 "true" {printf("true\n");return TRUE;}
-"<"   return L;
-">"   return G;
-"!="  return NEQ;
+"<"   return LessThan;
+">"   return GreaterThan;
+"!="  return NotEqual;
 "="   {return ASSIGN;}
 "&&"  return AND;
 "||"  return OR;
@@ -64,10 +64,10 @@ comment_str \/\/[^\n]*
 ";"     return SEMICOLON;
 ":"		return COLON;
 ","     return COMMA;
-"("     return OP;
-")"     return CP;
-"{"     return OB;
-"}"     return CB;
+"("     return OPEN_Parentheses ;
+")"     return CLOSED_Parentheses ;
+"{"     return OPEN_Brackets;
+"}"     return CLOSED_Brackets;
 "//"		return DBL_FORWARD_SLASH;
 "const"	return CONST;
 "if"	return IF;

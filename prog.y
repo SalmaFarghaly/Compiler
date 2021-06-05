@@ -33,7 +33,7 @@
 %token  <ourinfo> EXPCHAR
 %token  <ourinfo> EXPSTR 
 %token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL
-%token  EQ LE GE AND OR L G NEQ
+%token  Equal LessThan_OR_Equal GreaterThan_Or_Equal AND OR LessThan GreaterThan NotEqual
 %token  ASSIGN
 %token  FUNCNAME
 %token  ADD SUB MUL DIV INC DEC REM
@@ -41,7 +41,7 @@
 %token SEMICOLON COMMA COLON
 %token IF THEN CONST ELSE 
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
-%token  OP CP OB CB DBL_FORWARD_SLASH
+%token  OPEN_Parentheses  CLOSED_Parentheses  OPEN_Brackets CLOSED_Brackets DBL_FORWARD_SLASH
 %token FALSE TRUE END
 
 
@@ -58,8 +58,8 @@ program															// Note that an empty file or file with comments only will
 
 
 braced_block
-	: OB CB
-	| OB statements CB
+	: OPEN_Brackets CLOSED_Brackets
+	| OPEN_Brackets statements CLOSED_Brackets
 	;
 
 statements
@@ -159,18 +159,18 @@ identifier_assignment
 	;
 
 
-ob: OB {/* handle beginning of new scope */ printf("new scope\n");};
+ob: OPEN_Brackets {/* handle beginning of new scope */ printf("new scope\n");};
 
 
 // Function Declaration and Definition
 func_decl
-	: type variable OP func_params CP SEMICOLON //no default values for arguments
-	| VOID variable OP func_params CP SEMICOLON
+	: type variable OPEN_Parentheses  func_params CLOSED_Parentheses  SEMICOLON //no default values for arguments
+	| VOID variable OPEN_Parentheses  func_params CLOSED_Parentheses  SEMICOLON
 	;
 
 func_def
-	: type variable OP func_params CP braced_block
-	| VOID variable OP func_params CP braced_block
+	: type variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
+	| VOID variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
 	;
 func_params 
 	: 	/*empty*/  // for functions that have no parameters
@@ -185,7 +185,7 @@ multiple_func_params
 
 // Function Calls
 func_call
-	: variable OP func_call_params CP 
+	: variable OPEN_Parentheses  func_call_params CLOSED_Parentheses  
 	;
 
 func_call_params
@@ -200,16 +200,16 @@ multiple_func_call_params
 
 
 if_stmt
-	: IF OP  multiple_conditions CP braced_block {printf("Reduced to if statement\n");}
-	| IF OP  multiple_conditions CP braced_block ELSE braced_block {printf("Reduced to if else\n");}
+	: IF OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block {printf("Reduced to if statement\n");}
+	| IF OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
 	;
 
 while_loop
-	: WHILE OP  multiple_conditions CP braced_block
+	: WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block
 	;
 
 do_while
-	: DO braced_block WHILE OP  multiple_conditions CP SEMICOLON
+	: DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON
 	;
 
 
@@ -218,7 +218,7 @@ for_multiple_conditions: | multiple_conditions;
 for_expression_statements: | expression_statements;
 
 for_loop
-	: FOR OP for_var_declaration SEMICOLON for_multiple_conditions SEMICOLON for_expression_statements CP braced_block
+	: FOR OPEN_Parentheses  for_var_declaration SEMICOLON for_multiple_conditions SEMICOLON for_expression_statements CLOSED_Parentheses  braced_block
 	;
 
 
@@ -237,7 +237,7 @@ case
 
 
 switch_stmt
-	: SWITCH OP expr CP ob multiple_cases CB // Verify using expr here. Check increment/decrement statements
+	: SWITCH OPEN_Parentheses  expr CLOSED_Parentheses  ob multiple_cases CLOSED_Brackets // Verify using expr here. Check increment/decrement statements
 	;
 type 
 	: INT  {  
@@ -262,15 +262,15 @@ variable
 	
 comparsions
 	: equals
-	| GE 
-	| LE 
-	| L 
-	| G 
+	| GreaterThan_Or_Equal 
+	| LessThan_OR_Equal 
+	| LessThan 
+	| GreaterThan 
 	;
 
 equals
-	: EQ
-	| NEQ
+	: Equal
+	| NotEqual
 	;
 
 bit_operations
@@ -292,8 +292,8 @@ multiple_conditions
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	: expr
 	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
-	| NOT OP expr logicals expr CP
-	| NOT OP expr comparsions expr CP
+	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
+	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
 	| NOT variable
 	;
 
@@ -341,7 +341,7 @@ factor
 	| variable //a= a+3
 	| func_call
 	| NOT func_call
-	| OP expr CP
+	| OPEN_Parentheses  expr CLOSED_Parentheses 
 	;
 
 
