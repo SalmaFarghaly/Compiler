@@ -3,9 +3,13 @@
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
+	#define _GNU_SOURCE
 	int yylex();
-	void yyerror (char *s);
+	void yyerror (const char *s);
 	int typeno;
+	extern int yylineno;
+//    extern int column;
+
 %}
 %union {
   struct info{ 
@@ -20,6 +24,7 @@
 }  
 
 %start program
+%error-verbose
 
 
 %token  <ourinfo>IDENTIFIER 
@@ -37,7 +42,7 @@
 %token IF THEN CONST ELSE 
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
 %token  OP CP OB CB DBL_FORWARD_SLASH
-%token FALSE TRUE
+%token FALSE TRUE END
 
 
 
@@ -48,6 +53,7 @@ program															// Note that an empty file or file with comments only will
 	| statement	{printf("Reduced to statement\n");}
 	| statement program	{printf("Reduced to statement . program\n");}
 	| braced_block program	{printf("Reduced to braced_block . program\n");}
+	//| END {printf("end of fileeeeeeeeeee"); return;}
 	;
 
 
@@ -67,6 +73,8 @@ statement
 	| ctrl_statements
 	| return_stmt
 	| break_stmt // It must only be allowed inside loops and switch cases. 
+	| error SEMICOLON { yyerrok;}
+
 	;
 
 
@@ -113,7 +121,7 @@ ctrl_statements
 	;
 
 var_declaration
-	: type variable var_assignment
+	: type variable var_assignment 
 	| type variable var_assignment multiple_var_declarations
 	;
 
@@ -341,19 +349,22 @@ factor
 %%
 
 extern FILE *yyin;
-void yyerror(char *s){
-    extern int yylineno;
-    // fprintf(stderr,"At line %s %d ",s,yylineno);  
-    fprintf(stderr,"%s",s);  
-}
 
+void yyerror(const char *s)
+{
+    fprintf(stderr, "line %d: %s\n", yylineno, s);
+
+}
 
 
 
 
 int main()
 {
-	yyin=fopen("input.c","r");
+	yyin=fopen("error1.c","r");
+	//free(lineptr);
+
+
 	int yydebug=1;
 	int value;
 	value = yyparse();
@@ -364,8 +375,7 @@ int main()
 	else{
 		printf("Parsing Unsuccessful.\n");
 	}
-	int dummy;
-    scanf("%d", &dummy); 
+
 
 	fclose(yyin);
 	return 0;

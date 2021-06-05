@@ -1,12 +1,28 @@
 %{
+
     #include"prog.tab.h"
 	#include<stdio.h>
+	#include <errno.h>
 	#include<stdlib.h>
 	#include<malloc.h>
 	#include<string.h>
+	#define YYERROR_VERBOSE 1
+
     extern char yyval;
+	static int next_column = 1;
+    int column = 1;
+
+    extern int yylex();
+
+    extern char* yytext;
+
+    
+
+
 %}
-%option yylineno
+
+%option nounput yylineno
+
 
 alpha [a-zA-Z]
 digit [0-9]
@@ -14,6 +30,7 @@ str \"[^"\n]*\"
 character \'[^'\n]\'
 comment_str \/\/[^\n]*
 %%
+"end" return END;
 "-"   return SUB;
 "+"   return ADD;
 "*"   return MUL;
@@ -27,7 +44,7 @@ comment_str \/\/[^\n]*
 "<"   return L;
 ">"   return G;
 "!="  return NEQ;
-"="   return ASSIGN;
+"="   {return ASSIGN;}
 "&&"  return AND;
 "||"  return OR;
 "++"  return INC;
@@ -75,8 +92,9 @@ comment_str \/\/[^\n]*
 {comment_str}			{printf("Found a Single Line Comment\n");}
 
 [ \t] ;
-[\n] {++yylineno; }
-. ;
+[\n] ;
+.					printf("unexpected character\n");
+
 
 %%
 
