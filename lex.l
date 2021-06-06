@@ -83,10 +83,10 @@ comment_str \/\/[^\n]*
 
 
 
-{alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); return IDENTIFIER; }
+{alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); yylval.ourinfo.variable=(char)yytext[0];return IDENTIFIER; }
 {digit}+                  {return NUM;}
 [0-9]+\.[0-9]+            {return DECIMAL;}
-{str}                     {printf("stringg\n");return EXPSTR;}
+{str}                     {yylval.ourinfo.value=(char *)yytext;yylval.ourinfo.value++[strlen(yylval.ourinfo.value)] = 0; printf("stringg\n");return EXPSTR;}
 {character}               {return EXPCHAR;}
 {comment_str}			{printf("Found a Single Line Comment\n");}
 

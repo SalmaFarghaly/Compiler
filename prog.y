@@ -8,8 +8,10 @@
 	void yyerror (const char *s);
 	int typeno;
 	extern int yylineno;
-//    extern int column;
-
+	//char * addquad(char a,char* b, char* c,char* result);
+	void addquad2(char ,char* , char , char*);
+	FILE* yyout;
+	char ob[10]="T";
 %}
 %union {
   struct info{ 
@@ -19,6 +21,7 @@
 		char * quad;
 	    char  IDENTIFIER;
 		char * string;    
+		char  variable;
         int  type;
     }ourinfo;
 }  
@@ -128,7 +131,7 @@ var_declaration
 
 var_assignment
 	: /*empty*/  //for declaring variables without assigning it
-	| ASSIGN string  
+	| ASSIGN string {addquad2('=',$<ourinfo>2.value,'-',ob);}
     | ASSIGN multiple_conditions
 	;
 
@@ -360,13 +363,22 @@ void yyerror(const char *s)
 
 
 
+void addquad2(char a,char * b, char c,char* result)
+{
+   
+ 
+    fprintf(yyout,"\t result %s \t\t\t  operator %c \t\t\t   operand1 %s \t\t\t  operand2 %c \n", strtok(result,";"), a, strtok(b,";"), c);
+
+   
+}
+
 int main()
 {
 
-	yyin=fopen("input.c","r");
+	yyin=fopen("quad.c","r");
 	//free(lineptr);
 
-
+	yyout=fopen("out.txt","w");
 	int yydebug=1;
 	int value;
 	value = yyparse();

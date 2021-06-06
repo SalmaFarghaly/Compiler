@@ -1,0 +1,1 @@
+string salma="hhhh";
