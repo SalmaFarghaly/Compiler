@@ -1,5 +1,6 @@
 %{
 
+	#include "utilies.h"
     #include"prog.tab.h"
 	#include<stdio.h>
 	#include <errno.h>
@@ -30,8 +31,8 @@ str \"[^"\n]*\"
 character \'[^'\n]\'
 comment_str \/\/[^\n]*
 %%
-"-"   return SUB;
-"+"   return ADD;
+"-"   {strcpy(yylval.ourinfo.name, (char*)yytext);return SUB;}
+"+"   {strcpy(yylval.ourinfo.name, (char*)yytext);return ADD;}
 "*"   return MUL;
 "/"   return DIV;
 "%"   return REM;
@@ -48,9 +49,9 @@ comment_str \/\/[^\n]*
 "||"  return OR;
 "++"  return INC;
 "--"  return DEC;
-"^"   return XOR;
-"|"   return BitwiseOR;
-"&"   return BitwiseAnd;
+"^"   {strcpy(yylval.ourinfo.name, (char*)yytext);return XOR;}
+"|"   {strcpy(yylval.ourinfo.name, (char*)yytext);return BitwiseOR;}
+"&"   {strcpy(yylval.ourinfo.name, (char*)yytext);return BitwiseAnd;}
 "!"   return NOT;
 "char"      return CHAR;
 "int"       return INT;
@@ -84,10 +85,10 @@ comment_str \/\/[^\n]*
 
 
 {alpha}({alpha}|{digit})* { strcpy(yylval.ourinfo.name, (char*)yytext); yylval.ourinfo.variable=(char)yytext[0];return IDENTIFIER; }
-{digit}+                  {return NUM;}
-[0-9]+\.[0-9]+            {return DECIMAL;}
-{str}                     {yylval.ourinfo.value=(char *)yytext;yylval.ourinfo.value++[strlen(yylval.ourinfo.value)] = 0; printf("stringg\n");return EXPSTR;}
-{character}               {return EXPCHAR;}
+{digit}+                  {strcpy(yylval.ourinfo.name, (char*)yytext);return NUM;}
+[0-9]+\.[0-9]+            {strcpy(yylval.ourinfo.name, (char*)yytext);return DECIMAL;}
+{str}                     {strcpy(yylval.ourinfo.name, (char*)yytext);return EXPSTR;}
+{character}               {strcpy(yylval.ourinfo.name, (char*)yytext);return EXPCHAR;}
 {comment_str}			{printf("Found a Single Line Comment\n");}
 
 [ \t] ;

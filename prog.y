@@ -1,19 +1,41 @@
 
 %{	
+
+	#include "utilies.h"
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
 	#define _GNU_SOURCE
 	int yylex();
 	void yyerror (const char *s);
+
+
 	int typeno;
 	extern int yylineno;
 	//char * addquad(char a,char* b, char* c,char* result);
-	void addquad2(char ,char* , char , char*);
+	//void addquad2(char ,char* , char , char*);
+	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	// void newtemp();
 	FILE* yyout;
-	char ob[10]="T";
+	//char ob[10]="T";
+
+
+
+
+	struct quad quad[10];
+	int quadarrayptr=0;
+	int i=1;
+	char t[10]="t";
+	int tIdx=1;
+	int srcNo=1;
+	
+
 %}
 %union {
+  
+
+  struct Parse attr;
+
   struct info{ 
 		char name[10];
         char* value;
@@ -24,7 +46,20 @@
 		char  variable;
         int  type;
     }ourinfo;
+
+
+	//char op[10];
+	//char dtype[10];
+	//struct quad q1;
+	//int pos;
+	//struct ParseTreeNode attr;
+	//struct IntListNode *list;
+	//int int1;
+	//char name[10];
+	
 }  
+
+
 
 %start program
 %error-verbose
@@ -34,7 +69,7 @@
 %token  <ourinfo> NUM
 %token  <ourinfo> DECIMAL 
 %token  <ourinfo> EXPCHAR
-%token  <ourinfo> EXPSTR 
+%token  <ourinfo >EXPSTR
 %token  CHAR INT FLOAT DOUBLE STRING VOID RETURN BOOL  
 %token  FUNCNAME
 %token  INC DEC 
@@ -43,6 +78,27 @@
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
 %token  OPEN_Parentheses  CLOSED_Parentheses  OPEN_Brackets CLOSED_Brackets DBL_FORWARD_SLASH
 %token FALSE TRUE 
+
+
+%type  <ourinfo> variable
+%type  <ourinfo> term
+%type  <ourinfo> factor
+%type  <ourinfo> multiple_conditions
+%type  <ourinfo> condition
+%type  <ourinfo> expr
+%type  <ourinfo> expr2
+%type  <ourinfo> number
+%type  <ourinfo> math_operations
+%type  <ourinfo> bit_operations
+%type  <ourinfo> SUB
+%type  <ourinfo> ADD
+%type  <ourinfo> XOR BitwiseAnd BitwiseOR
+%type  <ourinfo> string
+%type  <ourinfo> var_declaration var_assignment multiple_var_declarations
+%type  <ourinfo> const_declaration const_assignment multiple_const_declarations
+
+
+
 
 %left AND OR ADD SUB MUL DIV REM
 %left Equal LessThan_OR_Equal GreaterThan_Or_Equal  LessThan GreaterThan NotEqual
@@ -125,41 +181,60 @@ ctrl_statements
 	;
 
 var_declaration
-	: type variable var_assignment 
-	| type variable var_assignment multiple_var_declarations
+	: type variable var_assignment {strcpy($$.name,$2.name);}
+	| type variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);}
 	;
 
 var_assignment
 	: /*empty*/  //for declaring variables without assigning it
-	| ASSIGN string {addquad2('=',$<ourinfo>2.value,'-',ob);}
-    | ASSIGN multiple_conditions
+	| ASSIGN string {
+		add_quad("=",$2.name,"-",t);
+		add_quad("=",t,"-",$$.name);
+	}
+    | ASSIGN multiple_conditions {
+		add_quad("=",t,"-",$$.name);
+	}
 	;
 
 multiple_var_declarations
-	: COMMA variable var_assignment
-	| COMMA variable var_assignment multiple_var_declarations
+	: COMMA variable var_assignment {strcpy($$.name,$2.name);}
+	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);}
 	;
 
 
 const_declaration
-	: CONST type variable const_assignment
-	| CONST type variable const_assignment multiple_const_declarations
+	: CONST type variable const_assignment {add_quad("=",t,"-",$3.name);}
+	| CONST type variable const_assignment multiple_const_declarations {add_quad("=",t,"-",$3.name);}
 	;
 
 multiple_const_declarations
-	: COMMA variable const_assignment
-	| COMMA variable const_assignment multiple_const_declarations
+	: COMMA variable const_assignment {strcpy($$.name,$2.name);}
+	| COMMA variable const_assignment multiple_const_declarations {strcpy($$.name,$2.name);}
 	;
 
 const_assignment
-	: ASSIGN multiple_conditions
-	| ASSIGN string
+	: ASSIGN multiple_conditions {
+		// add_quad("=",$2.name,"-",t);
+		add_quad("=",t,"-",$$.name);
+	}
+	| ASSIGN string {
+		add_quad("=",$2.name,"-",t);
+		add_quad("=",t,"-",$$.name);
+	}
 
 	;
 
 identifier_assignment
-	: variable ASSIGN string
-	| variable ASSIGN multiple_conditions
+	: variable ASSIGN string { 
+
+		add_quad("=",$3.name,"-",t);
+		add_quad("=",t,"-",$1.name);
+		}
+	| variable ASSIGN multiple_conditions {
+
+		//add_quad("=",$2.name,"-",t);
+		add_quad("=",t,"-",$1.name);
+		}
 	;
 
 
@@ -261,7 +336,7 @@ type
 	;
 
 variable
-	: IDENTIFIER {  strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
 	;
 	
 comparsions
@@ -289,16 +364,16 @@ booleans
 	;
 
 multiple_conditions
-	: condition
-	| condition logicals multiple_conditions
+	: condition {strcpy($$.name,$1.name)}
+	// | condition logicals multiple_conditions
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
-	: expr
-	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
-	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
-	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
-	| NOT variable
+	: expr {strcpy($$.name,$1.name)}
+//	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
+//	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
+//	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
+//	| NOT variable
 	;
 
 logicals
@@ -307,45 +382,62 @@ logicals
 	;
 
 number
-	: NUM	
-	| DECIMAL	
+	: NUM	 {strcpy($$.name,$1.name);}
+	| DECIMAL	 {strcpy($$.name,$1.name);}
 	;
 	
 string
-	: EXPSTR 
-	| EXPCHAR 
+	: EXPSTR {strcpy($$.name,$1.name);}
+	| EXPCHAR {strcpy($$.name,$1.name);}
 	;
 
 math_operations
-	: ADD 
-	| SUB
+	: ADD {strcpy($$.name,$1.name);}
+	| SUB {strcpy($$.name,$1.name);}
 	;
 
 expr 
-    : expr bit_operations term
-	| expr2
-	| booleans
+    : expr bit_operations expr2 {
+		add_quad($2.name,$1.name,$3.name,t);
+		strcpy($$.name,t);
+	}
+	| expr2 {strcpy($$.name,$1.name);}
+//	| booleans
 	;
 
 expr2
-	: expr2  math_operations term
-	| term 
+	: expr2  math_operations term {
+		add_quad($2.name,$1.name,$3.name,t);
+		strcpy($$.name,t);
+	}
+	|  term  {strcpy($$.name,$1.name);}
 	;
 
 
 term
-	: term MUL factor 
-	| term DIV factor
-	| term REM factor
-	| factor
+	: term MUL factor {
+		// newtemp();
+		//printf("in term Mul %s\n",t)
+		add_quad("*",$1.name,$3.name,t);
+		strcpy($$.name,t);
+	}
+	| term DIV factor {
+		add_quad("/",$1.name,$3.name,t);
+		strcpy($$.name,t);
+	}
+	| term REM factor{
+		add_quad("%",$1.name,$3.name,t);
+		strcpy($$.name,t);
+	}
+	| factor {strcpy($$.name,$1.name);}
 	;
 
 factor
-	: number
-	| variable //a= a+3
-	| func_call
-	| NOT func_call
-	| OPEN_Parentheses  expr CLOSED_Parentheses 
+	: number {strcpy($$.name,$1.name);}
+	| variable {strcpy($$.name,$1.name);}
+//	| func_call
+//	| NOT func_call
+	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
 	;
 
 
@@ -354,23 +446,56 @@ factor
 
 extern FILE *yyin;
 
+
+//to create new variable 't'
+void newtemp()
+{
+	char temp[10];
+	sprintf(temp,"%d",tIdx++);
+	strcpy(t,"t");
+	strcat(t,temp);
+	
+}
+
+void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
+{
+
+	fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,op,arg1,arg2,res);
+}
+
 void yyerror(const char *s)
 {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
 
 }
 
+void display()
+{
+	int j;
+	for(j=0;j<i;j++)
+	{
+		/*if(strcmp(quad[j].op,"")==0)
+		{
+			char buffer[10];
+			sprintf(buffer,"%d",i);
+			strcpy(quad[j].res,"goto(");
+			strcat(quad[j].res,buffer);
+			strcat(quad[j].res,")");
+		}*/
+		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",j,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
+	}	
+}
 
 
 
-void addquad2(char a,char * b, char c,char* result)
+/*void addquad2(char a,char * b, char c,char* result)
 {
    
  
     fprintf(yyout,"\t result %s \t\t\t  operator %c \t\t\t   operand1 %s \t\t\t  operand2 %c \n", strtok(result,";"), a, strtok(b,";"), c);
 
    
-}
+}*/
 
 int main()
 {
@@ -379,12 +504,14 @@ int main()
 	//free(lineptr);
 
 	yyout=fopen("out.txt","w");
+	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
 	int yydebug=1;
 	int value;
 	value = yyparse();
 
 	if(value == 0){
 		printf("Parsing Successful.\n");
+		display();
 	}
 	else{
 		printf("Parsing Unsuccessful.\n");

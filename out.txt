@@ -1,1 +1,51 @@
-	 result T 			  operator = 			   operand1 hhhh 			  operand2 - 
+St.No	op	arg1	arg2	res
+
+1	=	"hhhh"	-	t
+
+2	=	t	-	salma
+
+3	*	a	3	t
+
+4	*	t	2	t
+
+5	=	t	-	a
+
+6	*	2	2	t
+
+7	+	b	t	t
+
+8	=	t	-	a
+
+9	+	b	5	t
+
+10	*	t	c	t
+
+11	/	t	h	t
+
+12	-	t	1	t
+
+13	=	t	-	a
+
+14	+	d	9	t
+
+15	|	b	t	t
+
+16	=	t	-	ggg
+
+17	+	d	9	t
+
+18	=	t	-	a
+
+19	*	a	3	t
+
+20	*	t	2	t
+
+21	=	t	-	b
+
+22	=	t	-	a
+
+23	+	d	9	t
+
+24	=	t	-	a
+
+0				
