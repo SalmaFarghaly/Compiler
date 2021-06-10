@@ -36,14 +36,14 @@ comment_str \/\/[^\n]*
 "*"   return MUL;
 "/"   return DIV;
 "%"   return REM;
-">="  return GreaterThan_Or_Equal;
-"<="  return LessThan_OR_Equal;
-"=="  return Equal;
+">="  {strcpy(yylval.ourinfo.name, (char*)yytext);return GreaterThan_Or_Equal;}
+"<="  {strcpy(yylval.ourinfo.name, (char*)yytext);return LessThan_OR_Equal;}
+"=="  {strcpy(yylval.ourinfo.name, (char*)yytext);return Equal;}
 "false" { printf("false\n");return FALSE;}
 "true" {printf("true\n");return TRUE;}
-"<"   return LessThan;
-">"   return GreaterThan;
-"!="  return NotEqual;
+"<"   {strcpy(yylval.ourinfo.name, (char*)yytext);return LessThan;}
+">"   {strcpy(yylval.ourinfo.name, (char*)yytext);return GreaterThan;}
+"!="  {strcpy(yylval.ourinfo.name, (char*)yytext);return NotEqual;}
 "="   {return ASSIGN;}
 "&&"  return AND;
 "||"  return OR;

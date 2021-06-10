@@ -79,8 +79,8 @@
 %token  OPEN_Parentheses  CLOSED_Parentheses  OPEN_Brackets CLOSED_Brackets DBL_FORWARD_SLASH
 %token FALSE TRUE 
 
-
-%type  <ourinfo> variable
+%token  <ourinfo> GreaterThan GreaterThan_Or_Equal NotEqual Equal  LessThan LessThan_OR_Equal 
+%type  <ourinfo> variable equals
 %type  <ourinfo> term
 %type  <ourinfo> factor
 %type  <ourinfo> multiple_conditions
@@ -92,16 +92,16 @@
 %type  <ourinfo> bit_operations
 %type  <ourinfo> SUB
 %type  <ourinfo> ADD
-%type  <ourinfo> XOR BitwiseAnd BitwiseOR
+%type  <ourinfo> XOR BitwiseAnd BitwiseOR comparsions
 %type  <ourinfo> string
-%type  <ourinfo> var_declaration var_assignment multiple_var_declarations
-%type  <ourinfo> const_declaration const_assignment multiple_const_declarations
+%type  <ourinfo> var_assignment multiple_var_declarations
+%type  <ourinfo> const_assignment multiple_const_declarations
 
 
 
 
 %left AND OR ADD SUB MUL DIV REM
-%left Equal LessThan_OR_Equal GreaterThan_Or_Equal  LessThan GreaterThan NotEqual
+%left Equal LessThan_OR_Equal GreaterThan_Or_Equal 
 %left  XOR BitwiseAnd BitwiseOR COMMA
 
 %right NOT ASSIGN
@@ -154,11 +154,22 @@ break_stmt
 
 expression_statements
 	: identifier_assignment
-	| variable INC
-	| variable DEC
-	| INC variable
-	| DEC variable
-	//| multiple_conditions // TODO multipleConditions must be inside if block
+	| variable INC {
+		add_quad("+",$1.name,"1",t);
+		add_quad("=",t,"-",$1.name);
+	}
+	| variable DEC {
+		add_quad("-",$1.name,"1",t);
+		add_quad("=",t,"-",$1.name);
+	}
+	| INC variable {
+		add_quad("+",$2.name,"1",t);
+		add_quad("=",t,"-",$2.name);
+	}
+	| DEC variable {
+		add_quad("-",$2.name,"1",t);
+		add_quad("=",t,"-",$2.name);
+	}
 	;
 
 declaration_statements
@@ -180,9 +191,49 @@ ctrl_statements
 	| switch_stmt
 	;
 
+if_stmt
+	: IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block {
+		printf("Reduced to if statement\n");
+		//sadd_quad()
+	}
+	// | IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
+	;
+
+
+
+while_loop
+	: WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block
+	;
+
+do_while
+	: DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON
+	;
+
+
+multiple_conditions
+	: condition {strcpy($$.name,$1.name);}
+	| condition logicals multiple_conditions
+	;
+
+condition //(o/p of function or IDENTIFIER == bool )eq boolean
+	: expr {strcpy($$.name,$1.name)}
+	| expr comparsions expr  {
+		add_quad($2.name,$1.name,$3.name,strcat("t"));
+		printf("%d\n",$<ourinfo>$.type);
+	}
+//	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
+//	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
+//	| NOT variable
+	;
+
+logicals
+	: AND
+	| OR
+	;
+
 var_declaration
-	: type variable var_assignment {strcpy($$.name,$2.name);}
-	| type variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);}
+	: type variable var_assignment 
+	| type variable var_assignment multiple_var_declarations
 	;
 
 var_assignment
@@ -192,7 +243,9 @@ var_assignment
 		add_quad("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
-		add_quad("=",t,"-",$$.name);
+		printf("Multipleeeeeeee%s\n",$2.name);
+		//add_quad("=",$2.name,"-",t);
+		add_quad("=",$2.name,"-",$$.name);
 	}
 	;
 
@@ -203,8 +256,8 @@ multiple_var_declarations
 
 
 const_declaration
-	: CONST type variable const_assignment {add_quad("=",t,"-",$3.name);}
-	| CONST type variable const_assignment multiple_const_declarations {add_quad("=",t,"-",$3.name);}
+	: CONST type variable const_assignment 
+	| CONST type variable const_assignment multiple_const_declarations 
 	;
 
 multiple_const_declarations
@@ -214,8 +267,8 @@ multiple_const_declarations
 
 const_assignment
 	: ASSIGN multiple_conditions {
-		// add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$$.name);
+		//add_quad("=",$2.name,"-",t);
+		add_quad("=",$2.name,"-",$$.name);
 	}
 	| ASSIGN string {
 		add_quad("=",$2.name,"-",t);
@@ -232,8 +285,8 @@ identifier_assignment
 		}
 	| variable ASSIGN multiple_conditions {
 
-		//add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$1.name);
+		// add_quad("=",$3.name,"-",t);
+		add_quad("=",$3.name,"-",$1.name);
 		}
 	;
 
@@ -278,18 +331,6 @@ multiple_func_call_params
 	| COMMA expr multiple_func_call_params ;
 
 
-if_stmt
-	: IF OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block {printf("Reduced to if statement\n");}
-	| IF OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
-	;
-
-while_loop
-	: WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block
-	;
-
-do_while
-	: DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON
-	;
 
 
 for_var_declaration: | var_declaration;
@@ -340,16 +381,16 @@ variable
 	;
 	
 comparsions
-	: equals
-	| GreaterThan_Or_Equal 
-	| LessThan_OR_Equal 
-	| LessThan 
-	| GreaterThan 
+	: equals  {strcpy($$.name,$1.name);}
+	| GreaterThan_Or_Equal {strcpy($$.name,$1.name);}
+	| LessThan_OR_Equal {strcpy($$.name,$1.name);}
+	| LessThan {strcpy($$.name,$1.name);}
+	| GreaterThan {strcpy($$.name,$1.name);}
 	;
 
 equals
-	: Equal
-	| NotEqual
+	: Equal  {strcpy($$.name,$1.name);}
+	| NotEqual  {strcpy($$.name,$1.name);}
 	;
 
 bit_operations
@@ -363,23 +404,7 @@ booleans
 	| FALSE
 	;
 
-multiple_conditions
-	: condition {strcpy($$.name,$1.name)}
-	// | condition logicals multiple_conditions
-	;
 
-condition //(o/p of function or IDENTIFIER == bool )eq boolean
-	: expr {strcpy($$.name,$1.name)}
-//	| expr comparsions expr  {printf("%d\n",$<ourinfo>$.type);}
-//	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
-//	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
-//	| NOT variable
-	;
-
-logicals
-	: AND
-	| OR
-	;
 
 number
 	: NUM	 {strcpy($$.name,$1.name);}

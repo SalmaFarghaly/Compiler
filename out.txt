@@ -10,42 +10,56 @@ St.No	op	arg1	arg2	res
 
 5	=	t	-	a
 
-6	*	2	2	t
+6	+	b	5	t
 
-7	+	b	t	t
+7	*	t	c	t
 
-8	=	t	-	a
+8	/	t	h	t
 
-9	+	b	5	t
+9	-	t	1	t
 
-10	*	t	c	t
+10	=	t	-	a
 
-11	/	t	h	t
+11	+	d	9	t
 
-12	-	t	1	t
+12	|	b	t	t
 
-13	=	t	-	a
+13	=	t	-	ggg
 
 14	+	d	9	t
 
-15	|	b	t	t
+15	=	t	-	a
 
-16	=	t	-	ggg
+16	*	a	3	t
 
-17	+	d	9	t
+17	*	t	2	t
 
-18	=	t	-	a
+18	=	t	-	b
 
-19	*	a	3	t
+19	+	d	9	t
 
-20	*	t	2	t
+20	=	t	-	a
 
-21	=	t	-	b
+21	+	d	7	t
 
-22	=	t	-	a
+22	=	t	-	b
 
-23	+	d	9	t
+23	+	b	1	t
 
-24	=	t	-	a
+24	=	t	-	b
+
+25	-	b	1	t
+
+26	=	t	-	b
+
+27	>	a	4	goto(
+
+28	<	b	2	goto(
+
+29	*	2	2	t
+
+30	+	b	t	t
+
+31	=	t	-	a
 
 0				
