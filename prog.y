@@ -9,14 +9,14 @@
 	int yylex();
 	void yyerror (const char *s);
 
-
+	int globa=5;
 	int typeno;
 	extern int yylineno;
 	//char * addquad(char a,char* b, char* c,char* result);
 	//void addquad2(char ,char* , char , char*);
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
 	// void newtemp();
-	FILE* yyout;
+	
 	//char ob[10]="T";
 
 
@@ -194,7 +194,7 @@ ctrl_statements
 if_stmt
 	: IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block {
 		printf("Reduced to if statement\n");
-		//sadd_quad()
+		//add_quad("-",t,"-","goto");	
 	}
 	// | IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
 	;
@@ -211,15 +211,18 @@ do_while
 
 
 multiple_conditions
-	: condition {strcpy($$.name,$1.name);}
-	| condition logicals multiple_conditions
+	: condition logicals multiple_conditions//{if(globa==1){globa=2; add_quad("-",t,"-","got1o");}}
+	| condition {strcpy($$.name,$1.name); printf("globaaaaaaaaaaal222%s\n",$1.name);if(globa==1){ add_quad("-",t,"-","goto");globa=-1;}}
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	: expr {strcpy($$.name,$1.name)}
 	| expr comparsions expr  {
-		add_quad($2.name,$1.name,$3.name,strcat("t"));
-		printf("%d\n",$<ourinfo>$.type);
+
+		add_quad($2.name,$1.name,$3.name,t);
+		//add_quad("-","t","-","goto");
+		globa = 1;
+		printf("globaaaaaaaaaaal%d\n",globa);
 	}
 //	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
 //	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
@@ -470,7 +473,7 @@ factor
 %%
 
 extern FILE *yyin;
-
+extern FILE* yyout;
 
 //to create new variable 't'
 void newtemp()

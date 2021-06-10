@@ -6,6 +6,6 @@ int a=d+9,b=a*3*2;
 const int a=d+9,b=d+7;
 b++;
 --b;
-if(a>4&&b<2){
+if(a>4){
     a=b+2*2;
 }

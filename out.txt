@@ -52,9 +52,9 @@ St.No	op	arg1	arg2	res
 
 26	=	t	-	b
 
-27	>	a	4	goto(
+27	>	a	4	t
 
-28	<	b	2	goto(
+28	-	t	-	goto
 
 29	*	2	2	t
 
