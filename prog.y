@@ -15,19 +15,36 @@
 	//char * addquad(char a,char* b, char* c,char* result);
 	//void addquad2(char ,char* , char , char*);
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
-	// void newtemp();
-	
+	void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void construct_quad2(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void newtemp();
+	void newLabel();
+	void write_conditionquads();
+	void write_barcedquads();
+
+
 	//char ob[10]="T";
 
 
 
 
 	struct quad quad[10];
+	struct quad barcedquad[100];
 	int quadarrayptr=0;
+	int barcedquadarrayptr=0;
 	int i=1;
 	char t[10]="t";
 	int tIdx=1;
+
+	int labelIdx=1;
+	char label[10]="l";
 	int srcNo=1;
+	int ifIdx=0;
+	int resIdx=0;
+
+
+	char mulCondLabel[10];
+	char whileLabel[10];
 	
 
 %}
@@ -35,9 +52,9 @@
   
 
   struct Parse attr;
-
   struct info{ 
 		char name[10];
+		char token[10];
         char* value;
 		int quadvalue;
 		char * quad;
@@ -47,15 +64,6 @@
         int  type;
     }ourinfo;
 
-
-	//char op[10];
-	//char dtype[10];
-	//struct quad q1;
-	//int pos;
-	//struct ParseTreeNode attr;
-	//struct IntListNode *list;
-	//int int1;
-	//char name[10];
 	
 }  
 
@@ -83,7 +91,7 @@
 %type  <ourinfo> variable equals
 %type  <ourinfo> term
 %type  <ourinfo> factor
-%type  <ourinfo> multiple_conditions
+%type  <ourinfo> multiple_conditions logicals AND OR
 %type  <ourinfo> condition
 %type  <ourinfo> expr
 %type  <ourinfo> expr2
@@ -124,7 +132,7 @@ braced_block
 
 statements
 	: statement
-	| statement statements
+	| statement statements 
 	;
 
 statement
@@ -191,18 +199,36 @@ ctrl_statements
 	| switch_stmt
 	;
 
+
+
 if_stmt
-	: IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block {
-		printf("Reduced to if statement\n");
-		//add_quad("-",t,"-","goto");	
+	: IF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses  braced_block {
+		add_quad(label,"::"," "," ");
 	}
-	// | IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
+	| IF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses  braced_block {
+		char labelTemp[10];
+		strcpy(labelTemp,label);
+		newLabel();add_quad("jmp",label," "," ");add_quad(labelTemp,"::"," "," ");
+		} ELSE braced_block {
+		printf("Reduced to if else\n");
+		add_quad(label,"::"," "," ");
+	}
 	;
 
-
+dummy
+	: {		
+		newLabel();
+		add_quad("cmp",mulCondLabel,"true","-");
+		add_quad("jne",label," "," ");
+	}
 
 while_loop
-	: WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block
+	: {newLabel();add_quad(label,"::"," "," ");strcpy(whileLabel,label);} WHILE OPEN_Parentheses   multiple_conditions dummy CLOSED_Parentheses  braced_block
+	{
+		add_quad("jmp",whileLabel," "," ");
+		
+		add_quad(label,"::"," "," ");
+	}
 	;
 
 do_while
@@ -211,27 +237,33 @@ do_while
 
 
 multiple_conditions
-	: condition logicals multiple_conditions//{if(globa==1){globa=2; add_quad("-",t,"-","got1o");}}
-	| condition {strcpy($$.name,$1.name); printf("globaaaaaaaaaaal222%s\n",$1.name);if(globa==1){ add_quad("-",t,"-","goto");globa=-1;}}
+	: condition logicals multiple_conditions{
+		newtemp();
+		add_quad($2.name,$1.name,$3.name,t);
+		strcpy($$.name,t);
+		strcpy(mulCondLabel,t);
+	}
+	| condition {
+		strcpy($$.name,$1.name); 
+	}
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	: expr {strcpy($$.name,$1.name)}
 	| expr comparsions expr  {
 
+		newtemp();
 		add_quad($2.name,$1.name,$3.name,t);
-		//add_quad("-","t","-","goto");
-		globa = 1;
-		printf("globaaaaaaaaaaal%d\n",globa);
+		strcpy($$.name,t); 
 	}
-//	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
-//	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
-//	| NOT variable
+	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
+	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
+	| NOT variable
 	;
 
 logicals
-	: AND
-	| OR
+	: AND {strcpy($$.name,$1.name);}
+	| OR {strcpy($$.name,$1.name);}
 	;
 
 var_declaration
@@ -247,7 +279,6 @@ var_assignment
 	}
     | ASSIGN multiple_conditions {
 		printf("Multipleeeeeeee%s\n",$2.name);
-		//add_quad("=",$2.name,"-",t);
 		add_quad("=",$2.name,"-",$$.name);
 	}
 	;
@@ -270,7 +301,6 @@ multiple_const_declarations
 
 const_assignment
 	: ASSIGN multiple_conditions {
-		//add_quad("=",$2.name,"-",t);
 		add_quad("=",$2.name,"-",$$.name);
 	}
 	| ASSIGN string {
@@ -288,8 +318,12 @@ identifier_assignment
 		}
 	| variable ASSIGN multiple_conditions {
 
-		// add_quad("=",$3.name,"-",t);
-		add_quad("=",$3.name,"-",$1.name);
+		if($3.name[0]!='t'){
+			add_quad("=",$3.name,"-",t);
+			add_quad("=",t,"-",$1.name);
+		}
+		else
+			add_quad("=",$3.name,"-",$1.name);
 		}
 	;
 
@@ -429,8 +463,10 @@ expr
 		add_quad($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
-	| expr2 {strcpy($$.name,$1.name);}
-//	| booleans
+	| expr2 {
+		strcpy($$.name,$1.name);
+	}
+	| booleans
 	;
 
 expr2
@@ -438,14 +474,16 @@ expr2
 		add_quad($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
-	|  term  {strcpy($$.name,$1.name);}
+	|  term  {
+
+		strcpy($$.name,$1.name);
+	}
 	;
 
 
 term
 	: term MUL factor {
-		// newtemp();
-		//printf("in term Mul %s\n",t)
+
 		add_quad("*",$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
@@ -457,14 +495,20 @@ term
 		add_quad("%",$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
-	| factor {strcpy($$.name,$1.name);}
+	| factor {
+		strcpy($$.name,$1.name);
+	}
 	;
 
-factor
-	: number {strcpy($$.name,$1.name);}
-	| variable {strcpy($$.name,$1.name);}
-//	| func_call
-//	| NOT func_call
+factor 
+	: number {
+		strcpy($$.name,$1.name);
+	}
+	| variable {
+		strcpy($$.name,$1.name);
+	}
+	| func_call
+	| NOT func_call
 	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
 	;
 
@@ -484,6 +528,17 @@ void newtemp()
 	strcat(t,temp);
 	
 }
+void newLabel()
+{
+	char temp[10];
+	sprintf(temp,"%d",labelIdx++);
+	strcpy(label,"l");
+	strcat(label,temp);
+	
+}
+
+
+
 
 void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
 {
@@ -491,39 +546,60 @@ void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
 	fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,op,arg1,arg2,res);
 }
 
+
+void write_conditionquads()
+{
+
+	for(int j=0;j<=quadarrayptr;j++){
+		if (strcmp(quad[j].op," ")==1)
+		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
+	}
+	quadarrayptr=0;
+}
+
+void write_barcedquads()
+{
+
+	for(int j=0;j<=barcedquadarrayptr;j++){
+		if (strcmp(barcedquad[j].op," ")==1)
+		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,barcedquad[j].op,barcedquad[j].arg1,barcedquad[j].arg2,barcedquad[j].res);
+	}
+	barcedquadarrayptr=0;
+}
+
+
+
+void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
+
+
+	memcpy(quad[quadarrayptr].op,op,strlen(op)+1);
+	memcpy(quad[quadarrayptr].arg1,arg1,strlen(arg1)+1);
+	memcpy(quad[quadarrayptr].arg2,arg2,strlen(arg2)+1);
+	memcpy(quad[quadarrayptr].res,res,strlen(res)+1);
+
+	quadarrayptr++;
+}
+void construct_quad2(char op[10],char arg1[10],char arg2[10],char res[10]){
+
+
+	memcpy(barcedquad[barcedquadarrayptr].op,op,strlen(op)+1);
+	memcpy(barcedquad[barcedquadarrayptr].arg1,arg1,strlen(arg1)+1);
+	memcpy(barcedquad[barcedquadarrayptr].arg2,arg2,strlen(arg2)+1);
+	memcpy(barcedquad[barcedquadarrayptr].res,res,strlen(res)+1);
+
+	barcedquadarrayptr++;
+}
 void yyerror(const char *s)
 {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
 
 }
 
-void display()
-{
-	int j;
-	for(j=0;j<i;j++)
-	{
-		/*if(strcmp(quad[j].op,"")==0)
-		{
-			char buffer[10];
-			sprintf(buffer,"%d",i);
-			strcpy(quad[j].res,"goto(");
-			strcat(quad[j].res,buffer);
-			strcat(quad[j].res,")");
-		}*/
-		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",j,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
-	}	
-}
 
 
 
-/*void addquad2(char a,char * b, char c,char* result)
-{
-   
- 
-    fprintf(yyout,"\t result %s \t\t\t  operator %c \t\t\t   operand1 %s \t\t\t  operand2 %c \n", strtok(result,";"), a, strtok(b,";"), c);
 
-   
-}*/
+
 
 int main()
 {
@@ -539,7 +615,7 @@ int main()
 
 	if(value == 0){
 		printf("Parsing Successful.\n");
-		display();
+		//display();
 	}
 	else{
 		printf("Parsing Unsuccessful.\n");
