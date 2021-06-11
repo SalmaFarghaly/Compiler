@@ -45,6 +45,7 @@
 
 	char mulCondLabel[10];
 	char whileLabel[10];
+	char forLabel[10];
 	
 
 %}
@@ -232,7 +233,11 @@ while_loop
 	;
 
 do_while
-	: DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON
+	: {newLabel();add_quad(label,"::"," "," ");} DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON{
+		add_quad("cmp",t,"true"," ");
+		add_quad("je",label," "," ");
+
+	}
 	;
 
 
@@ -375,7 +380,16 @@ for_multiple_conditions: | multiple_conditions;
 for_expression_statements: | expression_statements;
 
 for_loop
-	: FOR OPEN_Parentheses  for_var_declaration SEMICOLON for_multiple_conditions SEMICOLON for_expression_statements CLOSED_Parentheses  braced_block
+	: FOR OPEN_Parentheses for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
+	SEMICOLON for_multiple_conditions {
+		  add_quad("cmp",t,"true"," ");
+		  newLabel();
+		  add_quad("jne",label," "," ");
+	  }
+	  SEMICOLON for_expression_statements CLOSED_Parentheses  braced_block{
+		  add_quad("jmp",forLabel," "," ");
+		  add_quad(label,"::"," "," ");
+	  }
 	;
 
 
