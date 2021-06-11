@@ -1,115 +1,61 @@
 St.No	op	arg1	arg2	res
 
-1	=	"hhhh"	-	t
+1	=	0	-	t
 
-2	=	t	-	salma
+2	=	t	-	i
 
-3	*	a	3	t
+3	l1	::	 	 
 
-4	*	t	2	t
+4	<	i	10	t1
 
-5	=	t	-	a
+5	cmp	t1	true	 
 
-6	+	b	5	t
+6	jne	l2	 	 
 
-7	*	t	c	t
+7	=	10	-	t1
 
-8	/	t	h	t
+8	=	t1	-	b
 
-9	-	t	1	t
+9	+	i	1	t1
 
-10	=	t	-	a
+10	=	t1	-	i
 
-11	+	d	9	t
+11	jmp	l1	 	 
 
-12	|	b	t	t
+12	l2	::	 	 
 
-13	=	t	-	ggg
+13	=	0	-	t1
 
-14	+	d	9	t
+14	=	t1	-	x
 
-15	=	t	-	a
+15	l3	::	 	 
 
-16	*	a	3	t
+16	<	x	20	t2
 
-17	*	t	2	t
+17	cmp	t2	true	-
 
-18	=	t	-	b
+18	jne	l4	 	 
 
-19	+	d	9	t
+19	+	x	1	t2
 
-20	=	t	-	a
+20	=	t2	-	x
 
-21	+	d	7	t
+21	jmp	l3	 	 
 
-22	=	t	-	b
+22	l4	::	 	 
 
-23	+	b	1	t
+23	=	0	-	t2
 
-24	=	t	-	b
+24	=	t2	-	x
 
-25	l1	::	 	 
+25	l5	::	 	 
 
-26	>	a	4	t1
+26	+	x	1	t2
 
-27	!=	a	5	t2
+27	=	t2	-	x
 
-28	<	b	9	t3
+28	<	x	20	t3
 
-29	||	t2	t3	t4
+29	cmp	t3	true	 
 
-30	&&	t1	t4	t5
-
-31	cmp	t5	true	-
-
-32	jne	l2	 	 
-
-33	*	2	2	t5
-
-34	+	b	t5	t5
-
-35	=	t5	-	a
-
-36	jmp	l1	 	 
-
-37	l2	::	 	 
-
-38	l3	::	 	 
-
-39	+	x	1	t5
-
-40	=	t5	-	x
-
-41	<	x	20	t6
-
-42	cmp	t6	true	 
-
-43	je	l3	 	 
-
-44	=	b	-	t6
-
-45	=	t6	-	g
-
-46	&&	b	d	t7
-
-47	=	t7	-	g
-
-48	=	0	-	i
-
-49	l4	::	 	 
-
-50	<	i	10	t8
-
-51	cmp	t8	true	 
-
-52	jne	l5	 	 
-
-53	+	i	1	t8
-
-54	=	t8	-	i
-
-55	=	10	-	b
-
-56	jmp	l4	 	 
-
-57	l5	::	 	 
+30	je	l5	 	 

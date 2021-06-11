@@ -12,18 +12,16 @@
 	int globa=5;
 	int typeno;
 	extern int yylineno;
-	//char * addquad(char a,char* b, char* c,char* result);
-	//void addquad2(char ,char* , char , char*);
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void add_quad2(char op[10],char arg1[10],char arg2[10],char res[10]);
 	void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
-	void construct_quad2(char op[10],char arg1[10],char arg2[10],char res[10]);
 	void newtemp();
 	void newLabel();
 	void write_conditionquads();
 	void write_barcedquads();
 
 
-	//char ob[10]="T";
+	
 
 
 
@@ -46,6 +44,8 @@
 	char mulCondLabel[10];
 	char whileLabel[10];
 	char forLabel[10];
+
+	int forExpr=0;
 	
 
 %}
@@ -164,20 +164,20 @@ break_stmt
 expression_statements
 	: identifier_assignment
 	| variable INC {
-		add_quad("+",$1.name,"1",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("+",$1.name,"1",t);
+		add_quad2("=",t,"-",$1.name);
 	}
 	| variable DEC {
-		add_quad("-",$1.name,"1",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("-",$1.name,"1",t);
+		add_quad2("=",t,"-",$1.name);
 	}
 	| INC variable {
-		add_quad("+",$2.name,"1",t);
-		add_quad("=",t,"-",$2.name);
+		add_quad2("+",$2.name,"1",t);
+		add_quad2("=",t,"-",$2.name);
 	}
 	| DEC variable {
-		add_quad("-",$2.name,"1",t);
-		add_quad("=",t,"-",$2.name);
+		add_quad2("-",$2.name,"1",t);
+		add_quad2("=",t,"-",$2.name);
 	}
 	;
 
@@ -244,12 +244,13 @@ do_while
 multiple_conditions
 	: condition logicals multiple_conditions{
 		newtemp();
-		add_quad($2.name,$1.name,$3.name,t);
+		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 		strcpy(mulCondLabel,t);
 	}
 	| condition {
 		strcpy($$.name,$1.name); 
+		strcpy(mulCondLabel,t);
 	}
 	;
 
@@ -258,7 +259,7 @@ condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	| expr comparsions expr  {
 
 		newtemp();
-		add_quad($2.name,$1.name,$3.name,t);
+		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t); 
 	}
 	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
@@ -279,12 +280,16 @@ var_declaration
 var_assignment
 	: /*empty*/  //for declaring variables without assigning it
 	| ASSIGN string {
-		add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$$.name);
+		add_quad2("=",$2.name,"-",t);
+		add_quad2("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
-		printf("Multipleeeeeeee%s\n",$2.name);
-		add_quad("=",$2.name,"-",$$.name);
+		if($2.name[0]!='t'){
+			add_quad2("=",$2.name,"-",t);
+			add_quad2("=",t,"-",$$.name);
+		}
+		else
+			add_quad2("=",$2.name,"-",$$.name);
 	}
 	;
 
@@ -306,11 +311,17 @@ multiple_const_declarations
 
 const_assignment
 	: ASSIGN multiple_conditions {
-		add_quad("=",$2.name,"-",$$.name);
+		//add_quad2("=",$2.name,"-",$$.name);
+		if($2.name[0]!='t'){
+			add_quad2("=",$2.name,"-",t);
+			add_quad2("=",t,"-",$$.name);
+		}
+		else
+			add_quad2("=",$2.name,"-",$$.name);
 	}
 	| ASSIGN string {
-		add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$$.name);
+		add_quad2("=",$2.name,"-",t);
+		add_quad2("=",t,"-",$$.name);
 	}
 
 	;
@@ -318,17 +329,17 @@ const_assignment
 identifier_assignment
 	: variable ASSIGN string { 
 
-		add_quad("=",$3.name,"-",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("=",$3.name,"-",t);
+		add_quad2("=",t,"-",$1.name);
 		}
 	| variable ASSIGN multiple_conditions {
 
 		if($3.name[0]!='t'){
-			add_quad("=",$3.name,"-",t);
-			add_quad("=",t,"-",$1.name);
+			add_quad2("=",$3.name,"-",t);
+			add_quad2("=",t,"-",$1.name);
 		}
 		else
-			add_quad("=",$3.name,"-",$1.name);
+			add_quad2("=",$3.name,"-",$1.name);
 		}
 	;
 
@@ -386,7 +397,8 @@ for_loop
 		  newLabel();
 		  add_quad("jne",label," "," ");
 	  }
-	  SEMICOLON for_expression_statements CLOSED_Parentheses  braced_block{
+	  SEMICOLON {forExpr=1;}for_expression_statements CLOSED_Parentheses  {forExpr=0;} braced_block{
+		  write_conditionquads();
 		  add_quad("jmp",forLabel," "," ");
 		  add_quad(label,"::"," "," ");
 	  }
@@ -474,7 +486,7 @@ math_operations
 
 expr 
     : expr bit_operations expr2 {
-		add_quad($2.name,$1.name,$3.name,t);
+		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	| expr2 {
@@ -485,7 +497,7 @@ expr
 
 expr2
 	: expr2  math_operations term {
-		add_quad($2.name,$1.name,$3.name,t);
+		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	|  term  {
@@ -498,15 +510,15 @@ expr2
 term
 	: term MUL factor {
 
-		add_quad("*",$1.name,$3.name,t);
+		add_quad2("*",$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	| term DIV factor {
-		add_quad("/",$1.name,$3.name,t);
+		add_quad2("/",$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	| term REM factor{
-		add_quad("%",$1.name,$3.name,t);
+		add_quad2("%",$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	| factor {
@@ -552,7 +564,14 @@ void newLabel()
 }
 
 
-
+void add_quad2(char op[10],char arg1[10],char arg2[10],char res[10]){
+	if(forExpr==0){
+		add_quad(op,arg1,arg2,res);
+	}
+	else{
+		construct_quad(op,arg1,arg2,res);
+	}
+}
 
 void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
 {
@@ -564,23 +583,12 @@ void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
 void write_conditionquads()
 {
 
-	for(int j=0;j<=quadarrayptr;j++){
+	for(int j=0;j<quadarrayptr;j++){
 		if (strcmp(quad[j].op," ")==1)
 		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
 	}
 	quadarrayptr=0;
 }
-
-void write_barcedquads()
-{
-
-	for(int j=0;j<=barcedquadarrayptr;j++){
-		if (strcmp(barcedquad[j].op," ")==1)
-		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,barcedquad[j].op,barcedquad[j].arg1,barcedquad[j].arg2,barcedquad[j].res);
-	}
-	barcedquadarrayptr=0;
-}
-
 
 
 void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
@@ -593,16 +601,7 @@ void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
 
 	quadarrayptr++;
 }
-void construct_quad2(char op[10],char arg1[10],char arg2[10],char res[10]){
 
-
-	memcpy(barcedquad[barcedquadarrayptr].op,op,strlen(op)+1);
-	memcpy(barcedquad[barcedquadarrayptr].arg1,arg1,strlen(arg1)+1);
-	memcpy(barcedquad[barcedquadarrayptr].arg2,arg2,strlen(arg2)+1);
-	memcpy(barcedquad[barcedquadarrayptr].res,res,strlen(res)+1);
-
-	barcedquadarrayptr++;
-}
 void yyerror(const char *s)
 {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
@@ -618,7 +617,7 @@ void yyerror(const char *s)
 int main()
 {
 
-	yyin=fopen("quad.c","r");
+	yyin=fopen("loop.c","r");
 	//free(lineptr);
 
 	yyout=fopen("out.txt","w");
