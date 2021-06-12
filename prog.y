@@ -14,13 +14,18 @@
 	int typeno;
 	int const_flag;
 	extern int yylineno;
-	//char * addquad(char a,char* b, char* c,char* result);
-	//void addquad2(char ,char* , char , char*);
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
 	void add_var_to_current_scope(int const_flag, int type, char* var_name, char* initializing_val, int initializing_val_type);
 	// void newtemp();
+	void add_quad2(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void newtemp();
+	void newLabel();
+	void write_conditionquads();
+	void write_barcedquads();
+
+
 	
-	//char ob[10]="T";
 
 	struct scope_tree* tree;
 	
@@ -31,11 +36,28 @@
 	char res[100];
 	char type[100];} quad[10];
 
+
+
+	struct quad quad[10];
+	struct quad barcedquad[100];
 	int quadarrayptr=0;
+	int barcedquadarrayptr=0;
 	int i=1;
 	char t[10]="t";
 	int tIdx=1;
+
+	int labelIdx=1;
+	char label[10]="l";
 	int srcNo=1;
+	int ifIdx=0;
+	int resIdx=0;
+
+
+	char mulCondLabel[10];
+	char whileLabel[10];
+	char forLabel[10];
+
+	int forExpr=0;
 	
 
 %}
@@ -43,9 +65,9 @@
   
 
   struct Parse attr;
-
   struct info{ 
 		char name[10];
+		char token[10];
         char* value;
 		int quadvalue;
 		char * quad;
@@ -55,15 +77,6 @@
         int  type;
     }ourinfo;
 
-
-	//char op[10];
-	//char dtype[10];
-	// struct quad q1;
-	//int pos;
-	//struct ParseTreeNode attr;
-	//struct IntListNode *list;
-	//int int1;
-	//char name[10];
 	
 }  
 
@@ -91,7 +104,7 @@
 %type  <ourinfo> variable equals
 %type  <ourinfo> term
 %type  <ourinfo> factor
-%type  <ourinfo> multiple_conditions
+%type  <ourinfo> multiple_conditions logicals AND OR
 %type  <ourinfo> condition
 %type  <ourinfo> expr
 %type  <ourinfo> expr2
@@ -138,7 +151,7 @@ braced_block
 
 statements
 	: statement
-	| statement statements
+	| statement statements 
 	;
 
 statement
@@ -169,20 +182,20 @@ break_stmt
 expression_statements
 	: identifier_assignment
 	| variable INC {
-		add_quad("+",$1.name,"1",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("+",$1.name,"1",t);
+		add_quad2("=",t,"-",$1.name);
 	}
 	| variable DEC {
-		add_quad("-",$1.name,"1",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("-",$1.name,"1",t);
+		add_quad2("=",t,"-",$1.name);
 	}
 	| INC variable {
-		add_quad("+",$2.name,"1",t);
-		add_quad("=",t,"-",$2.name);
+		add_quad2("+",$2.name,"1",t);
+		add_quad2("=",t,"-",$2.name);
 	}
 	| DEC variable {
-		add_quad("-",$2.name,"1",t);
-		add_quad("=",t,"-",$2.name);
+		add_quad2("-",$2.name,"1",t);
+		add_quad2("=",t,"-",$2.name);
 	}
 	;
 
@@ -205,52 +218,78 @@ ctrl_statements
 	| switch_stmt
 	;
 
+
+
 if_stmt
-	: IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block {
-		printf("Reduced to if statement\n");
-		//add_quad("-",t,"-","goto");	
+	: IF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses  braced_block {
+		add_quad(label,"::"," "," ");
 	}
-	// | IF OPEN_Parentheses  multiple_conditions CLOSED_Parentheses  braced_block ELSE braced_block {printf("Reduced to if else\n");}
+	| IF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses  braced_block {
+		char labelTemp[10];
+		strcpy(labelTemp,label);
+		newLabel();add_quad("jmp",label," "," ");add_quad(labelTemp,"::"," "," ");
+		} ELSE braced_block {
+		printf("Reduced to if else\n");
+		add_quad(label,"::"," "," ");
+	}
 	;
 
-
+dummy
+	: {		
+		newLabel();
+		add_quad("cmp",mulCondLabel,"true","-");
+		add_quad("jne",label," "," ");
+	}
 
 while_loop
-	: WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  braced_block
+	: {newLabel();add_quad(label,"::"," "," ");strcpy(whileLabel,label);} WHILE OPEN_Parentheses   multiple_conditions dummy CLOSED_Parentheses  braced_block
+	{
+		add_quad("jmp",whileLabel," "," ");
+		
+		add_quad(label,"::"," "," ");
+	}
 	;
 
 do_while
-	: DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON
+	: {newLabel();add_quad(label,"::"," "," ");} DO braced_block WHILE OPEN_Parentheses   multiple_conditions CLOSED_Parentheses  SEMICOLON{
+		add_quad("cmp",t,"true"," ");
+		add_quad("je",label," "," ");
+
+	}
 	;
 
 
 multiple_conditions
-	: condition logicals multiple_conditions	{
-												// if(globa==1){
-												// 	globa=2; add_quad("-",t,"-","got1o");
-												// 	}
-												$$.type = $1.type;
-												}
-	| condition {strcpy($$.name,$1.name); $$.type = $1.type; printf("globaaaaaaaaaaal222%s\n",$1.name);if(globa==1){ add_quad("-",t,"-","goto");globa=-1;}}
+	: condition logicals multiple_conditions{
+		$$.type = $1.type;
+		newtemp();
+		add_quad2($2.name,$1.name,$3.name,t);
+		strcpy($$.name,t);
+		strcpy(mulCondLabel,t);
+	}
+	| condition {
+		$$.type = $1.type;
+		strcpy($$.name,$1.name); 
+		strcpy(mulCondLabel,t);
+	}
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
 	: expr {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| expr comparsions expr  {
 
-		add_quad($2.name,$1.name,$3.name,t);
-		//add_quad("-","t","-","goto");
-		globa = 1;
-		printf("globaaaaaaaaaaal%d\n",globa);
+		newtemp();
+		add_quad2($2.name,$1.name,$3.name,t);
+		strcpy($$.name,t); 
 	}
-//	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
-//	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
-//	| NOT variable
+	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses
+	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
+	| NOT variable
 	;
 
 logicals
-	: AND
-	| OR
+	: AND {strcpy($$.name,$1.name);}
+	| OR {strcpy($$.name,$1.name);}
 	;
 
 var_declaration
@@ -263,26 +302,27 @@ var_assignment
 	| ASSIGN string {
 		strcpy($$.name, $2.name);
 		$$.type = $2.type;
-		add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$$.name);
+		add_quad2("=",$2.name,"-",t);
+		add_quad2("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
 		strcpy($$.name, $2.name);
 		$$.type = $2.type;
-		printf("Multipleeeeeeee%s\n",$2.name);
-		//add_quad("=",$2.name,"-",t);
-		add_quad("=",$2.name,"-",$$.name);
+		if($2.name[0]!='t'){
+			add_quad2("=",$2.name,"-",t);
+			add_quad2("=",t,"-",$$.name);
+		}
+		else
+			add_quad2("=",$2.name,"-",$$.name);
 	}
 	;
 
 multiple_var_declarations
 	: COMMA variable var_assignment {strcpy($$.name,$2.name); 
 									 add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
-									 const_flag = 0;
 									}
 	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);
 																add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
-																const_flag = 0;
 																}
 	;
 
@@ -313,13 +353,17 @@ const_declaration: const_modifier var_declaration
 identifier_assignment
 	: variable ASSIGN string { 
 
-		add_quad("=",$3.name,"-",t);
-		add_quad("=",t,"-",$1.name);
+		add_quad2("=",$3.name,"-",t);
+		add_quad2("=",t,"-",$1.name);
 		}
 	| variable ASSIGN multiple_conditions {
 
-		// add_quad("=",$3.name,"-",t);
-		add_quad("=",$3.name,"-",$1.name);
+		if($3.name[0]!='t'){
+			add_quad2("=",$3.name,"-",t);
+			add_quad2("=",t,"-",$1.name);
+		}
+		else
+			add_quad2("=",$3.name,"-",$1.name);
 		}
 	;
 
@@ -372,7 +416,17 @@ for_multiple_conditions: | multiple_conditions;
 for_expression_statements: | expression_statements;
 
 for_loop
-	: FOR OPEN_Parentheses  for_var_declaration SEMICOLON for_multiple_conditions SEMICOLON for_expression_statements CLOSED_Parentheses  braced_block
+	: FOR OPEN_Parentheses for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
+	SEMICOLON for_multiple_conditions {
+		  add_quad("cmp",t,"true"," ");
+		  newLabel();
+		  add_quad("jne",label," "," ");
+	  }
+	  SEMICOLON {forExpr=1;}for_expression_statements CLOSED_Parentheses  {forExpr=0;} braced_block{
+		  write_conditionquads();
+		  add_quad("jmp",forLabel," "," ");
+		  add_quad(label,"::"," "," ");
+	  }
 	;
 
 
@@ -453,12 +507,12 @@ expr
 		strcpy($$.name,t);
 	}
 	| expr2 {strcpy($$.name,$1.name); $$.type = $1.type;}
-//	| booleans
+	| booleans
 	;
 
 expr2
 	: expr2  math_operations term {
-		add_quad($2.name,$1.name,$3.name,t);
+		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 		if($1.type == type_float || $3.type == type_float){
 			$$.type = type_float;
@@ -472,9 +526,8 @@ expr2
 
 term
 	: term MUL factor {
-		// newtemp();
-		//printf("in term Mul %s\n",t)
-		add_quad("*",$1.name,$3.name,t);
+
+		add_quad2("*",$1.name,$3.name,t);
 		strcpy($$.name,t);
 		if($1.type == type_float || $<ourinfo>2.type == type_float){
 			$$.type = type_float;
@@ -483,12 +536,12 @@ term
 		}
 	}
 	| term DIV factor {
-		add_quad("/",$1.name,$3.name,t);
+		add_quad2("/",$1.name,$3.name,t);
 		strcpy($$.name,t);
 		$$.type = type_float;
 	}
 	| term REM factor{
-		add_quad("%",$1.name,$3.name,t);
+		add_quad2("%",$1.name,$3.name,t);
 		strcpy($$.name,t);
 		$$.type = type_int;
 	}
@@ -498,8 +551,8 @@ term
 factor
 	: number {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| variable {strcpy($$.name,$1.name); }
-//	| func_call
-//	| NOT func_call
+	| func_call
+	| NOT func_call
 	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
 	;
 
@@ -519,11 +572,52 @@ void newtemp()
 	strcat(t,temp);
 	
 }
+void newLabel()
+{
+	char temp[10];
+	sprintf(temp,"%d",labelIdx++);
+	strcpy(label,"l");
+	strcat(label,temp);
+	
+}
+
+
+void add_quad2(char op[10],char arg1[10],char arg2[10],char res[10]){
+	if(forExpr==0){
+		add_quad(op,arg1,arg2,res);
+	}
+	else{
+		construct_quad(op,arg1,arg2,res);
+	}
+}
 
 void add_quad(char op[10],char arg1[10],char arg2[10],char res[10])
 {
 
 	fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,op,arg1,arg2,res);
+}
+
+
+void write_conditionquads()
+{
+
+	for(int j=0;j<quadarrayptr;j++){
+		if (strcmp(quad[j].op," ")==1)
+		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",srcNo++,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
+	}
+	quadarrayptr=0;
+}
+
+
+void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
+
+
+	memcpy(quad[quadarrayptr].op,op,strlen(op)+1);
+	memcpy(quad[quadarrayptr].arg1,arg1,strlen(arg1)+1);
+	memcpy(quad[quadarrayptr].arg2,arg2,strlen(arg2)+1);
+	memcpy(quad[quadarrayptr].res,res,strlen(res)+1);
+
+	quadarrayptr++;
 }
 
 void yyerror(const char *s)
@@ -532,33 +626,11 @@ void yyerror(const char *s)
 
 }
 
-void display()
-{
-	int j;
-	for(j=0;j<i;j++)
-	{
-		/*if(strcmp(quad[j].op,"")==0)
-		{
-			char buffer[10];
-			sprintf(buffer,"%d",i);
-			strcpy(quad[j].res,"goto(");
-			strcat(quad[j].res,buffer);
-			strcat(quad[j].res,")");
-		}*/
-		fprintf(yyout,"\n%d\t%s\t%s\t%s\t%s\n",j,quad[j].op,quad[j].arg1,quad[j].arg2,quad[j].res);
-	}	
-}
 
 
 
-/*void addquad2(char a,char * b, char c,char* result)
-{
-   
- 
-    fprintf(yyout,"\t result %s \t\t\t  operator %c \t\t\t   operand1 %s \t\t\t  operand2 %c \n", strtok(result,";"), a, strtok(b,";"), c);
 
-   
-}*/
+
 
 int main()
 {
@@ -581,7 +653,7 @@ int main()
 
 	if(value == 0){
 		printf("Parsing Successful.\n");
-		display();
+		//display();
 	}
 	else{
 		printf("Parsing Unsuccessful.\n");

@@ -45,8 +45,8 @@ comment_str \/\/[^\n]*
 ">"   {strcpy(yylval.ourinfo.name, (char*)yytext);return GreaterThan;}
 "!="  {strcpy(yylval.ourinfo.name, (char*)yytext);return NotEqual;}
 "="   {return ASSIGN;}
-"&&"  return AND;
-"||"  return OR;
+"&&"  {strcpy(yylval.ourinfo.name, (char*)yytext);return AND;}
+"||"  {strcpy(yylval.ourinfo.name, (char*)yytext);return OR;}
 "++"  return INC;
 "--"  return DEC;
 "^"   {strcpy(yylval.ourinfo.name, (char*)yytext);return XOR;}
