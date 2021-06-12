@@ -1,6 +1,6 @@
 %{
 
-	#include "utilies.h"
+	#include "headers/utilies.h"
     #include"prog.tab.h"
 	#include<stdio.h>
 	#include <errno.h>

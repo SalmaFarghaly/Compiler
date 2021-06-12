@@ -1,7 +1,8 @@
 
 %{	
 
-	#include "utilies.h"
+	#include "headers/utilies.h"
+	#include "headers/symbol_table.h"
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
@@ -11,18 +12,25 @@
 
 	int globa=5;
 	int typeno;
+	int const_flag;
 	extern int yylineno;
 	//char * addquad(char a,char* b, char* c,char* result);
 	//void addquad2(char ,char* , char , char*);
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void add_var_to_current_scope(int const_flag, int type, char* var_name, char* initializing_val, int initializing_val_type);
 	// void newtemp();
 	
 	//char ob[10]="T";
 
+	struct scope_tree* tree;
+	
+	struct quad {
+	char op[10];
+	char arg1[100];
+	char arg2[100];
+	char res[100];
+	char type[100];} quad[10];
 
-
-
-	struct quad quad[10];
 	int quadarrayptr=0;
 	int i=1;
 	char t[10]="t";
@@ -50,7 +58,7 @@
 
 	//char op[10];
 	//char dtype[10];
-	//struct quad q1;
+	// struct quad q1;
 	//int pos;
 	//struct ParseTreeNode attr;
 	//struct IntListNode *list;
@@ -95,7 +103,7 @@
 %type  <ourinfo> XOR BitwiseAnd BitwiseOR comparsions
 %type  <ourinfo> string
 %type  <ourinfo> var_assignment multiple_var_declarations
-%type  <ourinfo> const_assignment multiple_const_declarations
+// %type  <ourinfo> const_assignment multiple_const_declarations
 
 
 
@@ -118,8 +126,14 @@ program															// Note that an empty file or file with comments only will
 
 
 braced_block
-	: OPEN_Brackets CLOSED_Brackets
-	| OPEN_Brackets statements CLOSED_Brackets
+	: ob cb
+	| ob statements cb
+	| ob braced_block cb
+	| ob statements braced_block cb
+	| ob braced_block statements cb
+	| ob braced_block statements braced_block cb
+	| ob statements braced_block statements cb
+
 	;
 
 statements
@@ -211,12 +225,17 @@ do_while
 
 
 multiple_conditions
-	: condition logicals multiple_conditions//{if(globa==1){globa=2; add_quad("-",t,"-","got1o");}}
-	| condition {strcpy($$.name,$1.name); printf("globaaaaaaaaaaal222%s\n",$1.name);if(globa==1){ add_quad("-",t,"-","goto");globa=-1;}}
+	: condition logicals multiple_conditions	{
+												// if(globa==1){
+												// 	globa=2; add_quad("-",t,"-","got1o");
+												// 	}
+												$$.type = $1.type;
+												}
+	| condition {strcpy($$.name,$1.name); $$.type = $1.type; printf("globaaaaaaaaaaal222%s\n",$1.name);if(globa==1){ add_quad("-",t,"-","goto");globa=-1;}}
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
-	: expr {strcpy($$.name,$1.name)}
+	: expr {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| expr comparsions expr  {
 
 		add_quad($2.name,$1.name,$3.name,t);
@@ -235,17 +254,21 @@ logicals
 	;
 
 var_declaration
-	: type variable var_assignment 
-	| type variable var_assignment multiple_var_declarations
+	: type variable var_assignment { add_var_to_current_scope(const_flag, $<ourinfo>1.type, $2.name, $3.name, $3.type); const_flag = 0;}
+	| type variable var_assignment multiple_var_declarations { add_var_to_current_scope(const_flag, $<ourinfo>1.type, $2.name, $3.name, $3.type); const_flag = 0;}
 	;
 
 var_assignment
-	: /*empty*/  //for declaring variables without assigning it
+	: /*empty*/  /*for declaring variables without assigning it*/ {$$.type = -1}
 	| ASSIGN string {
+		strcpy($$.name, $2.name);
+		$$.type = $2.type;
 		add_quad("=",$2.name,"-",t);
 		add_quad("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
+		strcpy($$.name, $2.name);
+		$$.type = $2.type;
 		printf("Multipleeeeeeee%s\n",$2.name);
 		//add_quad("=",$2.name,"-",t);
 		add_quad("=",$2.name,"-",$$.name);
@@ -253,32 +276,39 @@ var_assignment
 	;
 
 multiple_var_declarations
-	: COMMA variable var_assignment {strcpy($$.name,$2.name);}
-	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);}
+	: COMMA variable var_assignment {strcpy($$.name,$2.name); 
+									 add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
+									 const_flag = 0;
+									}
+	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);
+																add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
+																const_flag = 0;
+																}
 	;
 
+const_modifier: CONST {const_flag = 1;}
+const_declaration: const_modifier var_declaration
+// const_declaration
+// 	: CONST type variable const_assignment  
+// 	| CONST type variable const_assignment multiple_const_declarations 
+// 	;
 
-const_declaration
-	: CONST type variable const_assignment 
-	| CONST type variable const_assignment multiple_const_declarations 
-	;
+// multiple_const_declarations
+// 	: COMMA variable const_assignment {strcpy($$.name,$2.name);}
+// 	| COMMA variable const_assignment multiple_const_declarations {strcpy($$.name,$2.name);}
+// 	;
 
-multiple_const_declarations
-	: COMMA variable const_assignment {strcpy($$.name,$2.name);}
-	| COMMA variable const_assignment multiple_const_declarations {strcpy($$.name,$2.name);}
-	;
+// const_assignment
+// 	: ASSIGN multiple_conditions {
+// 		//add_quad("=",$2.name,"-",t);
+// 		add_quad("=",$2.name,"-",$$.name);
+// 	}
+// 	| ASSIGN string {
+// 		add_quad("=",$2.name,"-",t);
+// 		add_quad("=",t,"-",$$.name);
+// 	}
 
-const_assignment
-	: ASSIGN multiple_conditions {
-		//add_quad("=",$2.name,"-",t);
-		add_quad("=",$2.name,"-",$$.name);
-	}
-	| ASSIGN string {
-		add_quad("=",$2.name,"-",t);
-		add_quad("=",t,"-",$$.name);
-	}
-
-	;
+// 	;
 
 identifier_assignment
 	: variable ASSIGN string { 
@@ -294,8 +324,9 @@ identifier_assignment
 	;
 
 
-ob: OPEN_Brackets {/* handle beginning of new scope */ printf("new scope\n");};
+ob: OPEN_Brackets { create_scope(tree); printf("New Scope\n");};
 
+cb: CLOSED_Brackets { close_current_scope(tree); };
 
 // Function Declaration and Definition
 func_decl
@@ -360,27 +391,19 @@ case
 
 
 switch_stmt
-	: SWITCH OPEN_Parentheses  expr CLOSED_Parentheses  ob multiple_cases CLOSED_Brackets // Verify using expr here. Check increment/decrement statements
+	: SWITCH OPEN_Parentheses  expr CLOSED_Parentheses  ob multiple_cases cb // Verify using expr here. Check increment/decrement statements
 	;
+
 type 
-	: INT  {  
-			$<ourinfo>1.type = 2 ; 
-			$<ourinfo>$=$<ourinfo>1; 
-			typeno=2;
-			printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);
-		}
-	| CHAR {  
-			$<ourinfo>1.type = 1 ; 
-			$<ourinfo>$=$<ourinfo>1; 
-			typeno=1;
-		}
-	| FLOAT   {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3;}
-	| STRING  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=4;}
-	| BOOL    {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=5;} 
+	: INT	{ $<ourinfo>$.type = type_int; typeno = type_int;}
+	| CHAR	{ $<ourinfo>$.type = type_char; typeno = type_char;}
+	| FLOAT	{ $<ourinfo>$.type = type_float; typeno = type_float;}
+	| STRING	{ $<ourinfo>$.type = type_string; typeno = type_string;}
+	| BOOL	{ $<ourinfo>$.type = type_bool; typeno = type_bool;}
 	;
 
 variable
-	: IDENTIFIER {strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {strcpy($$.name, $1.name);}
 	;
 	
 comparsions
@@ -410,13 +433,13 @@ booleans
 
 
 number
-	: NUM	 {strcpy($$.name,$1.name);}
-	| DECIMAL	 {strcpy($$.name,$1.name);}
+	: NUM	 {strcpy($$.name,$1.name); $$.type = type_int;}
+	| DECIMAL	 {strcpy($$.name,$1.name); $$.type = type_float;}
 	;
 	
 string
-	: EXPSTR {strcpy($$.name,$1.name);}
-	| EXPCHAR {strcpy($$.name,$1.name);}
+	: EXPSTR {strcpy($$.name,$1.name); $$.type = type_string;}
+	| EXPCHAR {strcpy($$.name,$1.name); $$.type = type_char;}
 	;
 
 math_operations
@@ -425,11 +448,11 @@ math_operations
 	;
 
 expr 
-    : expr bit_operations expr2 {
+    : expr bit_operations expr2 { // Should we limit bitwise operations to integer values only?
 		add_quad($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
-	| expr2 {strcpy($$.name,$1.name);}
+	| expr2 {strcpy($$.name,$1.name); $$.type = $1.type;}
 //	| booleans
 	;
 
@@ -437,8 +460,13 @@ expr2
 	: expr2  math_operations term {
 		add_quad($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
+		if($1.type == type_float || $3.type == type_float){
+			$$.type = type_float;
+		} else{
+			$$.type = type_int;
+		}
 	}
-	|  term  {strcpy($$.name,$1.name);}
+	|  term  {strcpy($$.name,$1.name); $$.type = $1.type;}
 	;
 
 
@@ -448,21 +476,28 @@ term
 		//printf("in term Mul %s\n",t)
 		add_quad("*",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		if($1.type == type_float || $<ourinfo>2.type == type_float){
+			$$.type = type_float;
+		} else{
+			$$.type = type_int;
+		}
 	}
 	| term DIV factor {
 		add_quad("/",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		$$.type = type_float;
 	}
 	| term REM factor{
 		add_quad("%",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		$$.type = type_int;
 	}
-	| factor {strcpy($$.name,$1.name);}
+	| factor {strcpy($$.name,$1.name); $$.type=$1.type;}
 	;
 
 factor
-	: number {strcpy($$.name,$1.name);}
-	| variable {strcpy($$.name,$1.name);}
+	: number {strcpy($$.name,$1.name); $$.type = $1.type;}
+	| variable {strcpy($$.name,$1.name); }
 //	| func_call
 //	| NOT func_call
 	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
@@ -528,11 +563,18 @@ void display()
 int main()
 {
 
-	yyin=fopen("quad.c","r");
+	yyin=fopen("c_files/input2.c","r");
 	//free(lineptr);
 
 	yyout=fopen("out.txt","w");
 	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
+	
+	// Initialize Tree with global symbol table
+	tree = malloc(sizeof(struct scope_tree));
+	tree->root = malloc(sizeof(struct symbol_table));
+	tree->current_scope =tree->root;
+	print(tree->current_scope);
+
 	int yydebug=1;
 	int value;
 	value = yyparse();
@@ -545,11 +587,30 @@ int main()
 		printf("Parsing Unsuccessful.\n");
 	}
 
-
+	char* y;
+	scanf("%s", &y);
 	fclose(yyin);
 	return 0;
 }
 
 
-
-
+void add_var_to_current_scope(int const_flag, int type, char* var_name, char* initializing_val, int initializing_val_type)
+{
+	if (search(tree->current_scope, var_name) != NULL) 
+	{ //Search for variable name only in current scope
+		printf("Error: Re-declaration of existing variable %s\n", var_name); 
+	} 
+	else if (initializing_val_type == -1)
+	{
+		append(tree->current_scope, var_name, VAR, type, const_flag,  "\0");
+	} 
+	else if(type == initializing_val_type)
+	{ // If non-existent, append it to current scope
+		append(tree->current_scope, var_name, VAR, type, const_flag, initializing_val);
+	}
+	else
+	{
+		printf("Error: Mismatched initializing value of type %s for variable %s of type %s\n", types[initializing_val_type], var_name, types[type]); 
+	}
+	print(tree->current_scope);
+}
