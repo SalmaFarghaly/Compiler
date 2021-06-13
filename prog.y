@@ -24,7 +24,10 @@
 	void write_conditionquads();
 	void write_barcedquads();
 
-
+	struct identifier* search_result; 
+	int func_def_flag;
+	int func_params[100];
+	int func_params_index = 99;
 	
 
 	struct scope_tree* tree;
@@ -140,14 +143,14 @@ program															// Note that an empty file or file with comments only will
 
 braced_block
 	: ob cb
-	| ob statements cb
-	| ob braced_block cb
-	| ob statements braced_block cb
-	| ob braced_block statements cb
-	| ob braced_block statements braced_block cb
-	| ob statements braced_block statements cb
-
+	| ob block_content cb
 	;
+
+block_content
+	: statements
+	| braced_block
+	| statements braced_block block_content
+	| braced_block block_content
 
 statements
 	: statement
@@ -352,12 +355,38 @@ const_declaration: const_modifier var_declaration
 
 identifier_assignment
 	: variable ASSIGN string { 
+		search_result = search_tree(tree, $1.name);
 
+		if( search_result == NULL){
+			printf("Error : Undeclared Variable %s\n", $1.name);
+			print(tree->current_scope);
+		}
+		else if(search_result->attr->type == $3.type ){
+			strcpy(search_result->attr->value, $3.name);
+			print(tree->current_scope);
+		}
+		else{
+			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+		}
 		add_quad2("=",$3.name,"-",t);
 		add_quad2("=",t,"-",$1.name);
 		}
 	| variable ASSIGN multiple_conditions {
+		search_result = search_tree(tree, $1.name);
 
+		if( search_result == NULL){
+			printf("Error : Undeclared Variable %s\n", $1.name);
+			print(tree->current_scope);
+		}
+		else if(search_result->attr->type == $3.type ){
+			strcpy(search_result->attr->value, $3.name);
+			print(tree->current_scope);
+		}
+		else{
+			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+		}
+
+		// Quads
 		if($3.name[0]!='t'){
 			add_quad2("=",$3.name,"-",t);
 			add_quad2("=",t,"-",$1.name);
@@ -368,9 +397,30 @@ identifier_assignment
 	;
 
 
-ob: OPEN_Brackets { create_scope(tree); printf("New Scope\n");};
+ob: OPEN_Brackets { 
+					if(func_def_flag == 0){
+					create_scope(tree); printf("New Scope\n");
+					}
+					else{
+						func_def_flag = 0; printf("New Function Scope\n");
+					}
+				}
+				;
 
-cb: CLOSED_Brackets { close_current_scope(tree); };
+cb: CLOSED_Brackets { 
+						struct identifier* curr = tree->current_scope->head;
+						while(curr != NULL){
+							if(curr->attr->no_of_usages == 0){
+								char *buf = malloc(128);
+								sprintf(buf, "Warning : Variable %s is unused.\n", curr->attr->name);
+								yyerror(buf);
+							}
+							curr = curr->next;
+
+						}
+						close_current_scope(tree);
+
+					 };
 
 // Function Declaration and Definition
 func_decl
@@ -379,35 +429,139 @@ func_decl
 	;
 
 func_def
-	: type variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
-	| VOID variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
+	: type variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block {
+		append(tree->current_scope, $2.name, FUNC, $<ourinfo>1.type, 0, "N/A");
+		struct identifier* func_row = search(tree->current_scope, $2.name);
+
+		printf("Reading the parameters of function of name %s\n", $2.name);
+
+		for( int i = 0; i < 100; i++){
+			func_row->attr->params[i] = -1; 
+		}
+		// Find last child of current scope
+		struct symbol_table* curr = tree->current_scope->first_child;
+		while(curr->next_sibling != NULL){
+
+			curr = curr->next_sibling;
+		}
+
+		struct identifier* id = curr->head;
+		i = 99;
+		while(i>=0 && id != NULL && id->attr->kind == PAR){
+			func_row->attr->params[i] = id->attr->type;
+			printf("Parameter No. %d : %s\n",i, types[func_row->attr->params[i]]);
+			id = id->next;
+			i--;
+		}
+
+		print(tree->current_scope);
+
+	}
+	| VOID variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block {
+		append(tree->current_scope, $2.name, FUNC, type_void, 0, "N/A");
+		struct identifier* func_row = search(tree->current_scope, $2.name);
+		for( int i = 0; i < 100; i++){
+			func_row->attr->params[i] = -1; 
+		}
+		// Find last child of current scope
+		struct symbol_table* curr = tree->current_scope->first_child;
+		while(curr->next_sibling != NULL){
+			curr = curr->next_sibling;
+		}
+
+		struct identifier* id = curr->head;
+		i = 99;
+		while(id->attr->kind != PAR){
+			func_row->attr->params[i] = id->attr->type;
+			printf("Parameter No. %d : %s",i, types[func_row->attr->params[i]]);
+			id = id->next;
+			i--;
+		}
+		print(tree->current_scope);
+
+	}
 	;
 func_params 
-	: 	/*empty*/  // for functions that have no parameters
-	| 	type variable  
-	| 	type variable multiple_func_params
+	: 	/*empty*/  {func_def_flag = 1; create_scope(tree);}// for functions that have no parameters
+	| 	type variable  { func_def_flag = 1; create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");}
+	| 	type variable multiple_func_params { append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A"); }
 	;
 
 multiple_func_params
-	: COMMA type variable 
-	| COMMA type variable multiple_func_params ;
+	: COMMA type variable { func_def_flag = 1; create_scope(tree); append(tree->current_scope, $3.name, PAR, $<ourinfo>2.type, 0, "N/A");}
+	| COMMA type variable multiple_func_params {append(tree->current_scope, $3.name, PAR, $<ourinfo>2.type, 0, "N/A");}
 
 
 // Function Calls
 func_call
-	: variable OPEN_Parentheses  func_call_params CLOSED_Parentheses  
+	: variable OPEN_Parentheses  func_call_params CLOSED_Parentheses 
+	{
+		search_result = search_tree(tree, $1.name);
+		if(search_result == NULL){
+			char *buf = malloc(128);
+			sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+			yyerror(buf);
+			return 1;
+		}
+		else{
+			// Check alignment of parameter types with function header
+			i = 99;
+			while(search_result->attr->params[i] != -1){ i--;}
+			int count_header = 99 - i;
+
+			i = 99;
+			while(func_params[i] != -1){ i--;}
+			int count_call = 99 - i;
+
+			if(count_header - count_call > 0){
+				char *buf = malloc(128);
+				sprintf(buf, "Error : Function %s got too few arguments.\n", $1.name);
+				yyerror(buf);
+				return 1;
+			}
+			else if(count_header - count_call < 0){
+				char *buf = malloc(128);
+				sprintf(buf, "Error : Function %s got too many arguments.\n", $1.name);
+				yyerror(buf);
+				return 1;
+			}
+
+
+			for(int i = 99; i>=0; i--){
+				if(search_result->attr->params[i] != func_params[i]){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Incorrect parameter type. Expected %s but got %s.\n", types[search_result->attr->params[i]], types[func_params[i]]);
+					yyerror(buf);
+			
+					return 1;
+				}
+			}
+
+			strcpy($<ourinfo>$.name,search_result->attr->name);
+			$<ourinfo>$.type = search_result->attr->type;
+
+			for( int i = 0; i < 100; i++){
+				func_params[i] = -1; 
+			}
+		}
+	}
 	;
 
 func_call_params
 	: 	/*empty*/  // for functions that have no parameters
-	| 	expr  
-	| 	expr multiple_func_call_params
+	| 	func_expr  {func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99; }
+	| 	func_expr multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99;}
 	;
 
 multiple_func_call_params
-	: COMMA expr 
-	| COMMA expr multiple_func_call_params ;
+	: COMMA func_expr {func_params[func_params_index--] = $<ourinfo>2.type;}
+	| COMMA func_expr multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>2.type;}
+	;
 
+func_expr
+	: expr
+	| string
+	;
 
 
 
@@ -550,10 +704,30 @@ term
 
 factor
 	: number {strcpy($$.name,$1.name); $$.type = $1.type;}
-	| variable {strcpy($$.name,$1.name); }
-	| func_call
-	| NOT func_call
-	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
+	| variable {
+				search_result = search_tree(tree, $1.name);
+				if(search_result == NULL){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+					yyerror(buf);
+					return 1;
+				}
+				else if(strcmp(search_result->attr->value, "N/A") == 0){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Uninitialized Variable %s\n", $1.name);
+					yyerror(buf);
+					return 1;
+
+				}
+				else {
+					strcpy($$.name,search_result->attr->value);
+					$$.type = search_result->attr->type;
+					search_result->attr->no_of_usages++;
+				}
+				}
+	| func_call { strcpy($$.name,$<ourinfo>1.name); $$.type = $<ourinfo>1.type;}
+	| NOT func_call  //do we need to check if function return type is bool?
+	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name); $$.type = $2.type;}
 	;
 
 
@@ -634,7 +808,6 @@ void yyerror(const char *s)
 
 int main()
 {
-
 	yyin=fopen("c_files/input2.c","r");
 	//free(lineptr);
 
@@ -647,10 +820,24 @@ int main()
 	tree->current_scope =tree->root;
 	print(tree->current_scope);
 
+	// Initialize array that receives function params
+	for( int i = 0; i < 100; i++){
+		func_params[i] = -1; 
+	}
+
 	int yydebug=1;
 	int value;
 	value = yyparse();
 
+	struct identifier* curr = tree->root->head;
+	while(curr != NULL){
+		if(curr->attr->no_of_usages == 0){
+			char *buf = malloc(128);
+			sprintf(buf, "Warning : Variable %s is unused.\n", curr->attr->name);
+			yyerror(buf);
+		}
+		curr = curr->next;
+	}
 	if(value == 0){
 		printf("Parsing Successful.\n");
 		//display();
@@ -674,7 +861,7 @@ void add_var_to_current_scope(int const_flag, int type, char* var_name, char* in
 	} 
 	else if (initializing_val_type == -1)
 	{
-		append(tree->current_scope, var_name, VAR, type, const_flag,  "\0");
+		append(tree->current_scope, var_name, VAR, type, const_flag,  "N/A");
 	} 
 	else if(type == initializing_val_type)
 	{ // If non-existent, append it to current scope

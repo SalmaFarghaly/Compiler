@@ -93,7 +93,7 @@ comment_str \/\/[^\n]*
 
 [ \t] ;
 [\n] ;
-.					printf("unexpected character\n");
+.	
 
 
 %%

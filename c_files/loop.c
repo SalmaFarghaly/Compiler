@@ -5,8 +5,9 @@ void main()
   {
     int b = 10;
   }
-
-  int x = 0;
+  
+  int c = a;
+  int x = c;
 
   while (x < 20)
   {

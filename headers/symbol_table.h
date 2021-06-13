@@ -15,7 +15,9 @@ struct attributes{
 	enum kind kind;
 	enum type type;
 	char value[100];
-	int const_flag; 
+	int const_flag;
+	enum type params[100];
+	int no_of_usages;
 
 };
 struct identifier{
@@ -103,6 +105,7 @@ void append(struct symbol_table* table, char* name, enum kind kind, enum type ty
 	row->kind = kind;
 	row->type = type;
 	row->const_flag = const_flag;
+	row->no_of_usages = 0;
 	strcpy(row->value, value);
 
 	struct identifier* id = (struct identifier*)malloc(sizeof(struct identifier));
