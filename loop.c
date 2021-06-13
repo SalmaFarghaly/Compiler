@@ -1,23 +1,18 @@
-void main()
-{
-
-  for (int i = 0; i < 10; i++)
+  switch (x)
   {
-    int b = 10;
+  case 1:
+{    x = 10;
+    y=x+5;
+    break;}
+  case 2:
+  {  x = 20; break;}
+
+ 
+
+  default:
+  a=50;
+  break;   
+
   }
 
-  int x = 0;
 
-  while (x < 20)
-  {
-    x++;
-  }
-
-  x = 0;
-
-  do
-  {
-    x++;
-  } while (x < 20);
-
-}

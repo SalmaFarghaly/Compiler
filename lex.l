@@ -39,8 +39,8 @@ comment_str \/\/[^\n]*
 ">="  {strcpy(yylval.ourinfo.name, (char*)yytext);return GreaterThan_Or_Equal;}
 "<="  {strcpy(yylval.ourinfo.name, (char*)yytext);return LessThan_OR_Equal;}
 "=="  {strcpy(yylval.ourinfo.name, (char*)yytext);return Equal;}
-"false" { printf("false\n");return FALSE;}
-"true" {printf("true\n");return TRUE;}
+"false" {strcpy(yylval.ourinfo.name, (char*)yytext);return FALSE;}
+"true" {strcpy(yylval.ourinfo.name, (char*)yytext);return TRUE;}
 "<"   {strcpy(yylval.ourinfo.name, (char*)yytext);return LessThan;}
 ">"   {strcpy(yylval.ourinfo.name, (char*)yytext);return GreaterThan;}
 "!="  {strcpy(yylval.ourinfo.name, (char*)yytext);return NotEqual;}
@@ -72,6 +72,7 @@ comment_str \/\/[^\n]*
 "const"	return CONST;
 "if"	return IF;
 "then"	return THEN;
+"elseif" return ELSEIF;
 "else" return ELSE;
 "while" return WHILE;
 "do" return DO;

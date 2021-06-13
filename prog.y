@@ -5,6 +5,7 @@
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
+	#include <unistd.h>
 	#define _GNU_SOURCE
 	int yylex();
 	void yyerror (const char *s);
@@ -19,6 +20,8 @@
 	void newLabel();
 	void write_conditionquads();
 	void write_barcedquads();
+	void func_dummy();
+	void newRegister();
 
 
 	
@@ -32,6 +35,7 @@
 	int barcedquadarrayptr=0;
 	int i=1;
 	char t[10]="t";
+	char p[10]="p";
 	int tIdx=1;
 
 	int labelIdx=1;
@@ -39,13 +43,21 @@
 	int srcNo=1;
 	int ifIdx=0;
 	int resIdx=0;
+	int pIdx=0;
 
 
 	char mulCondLabel[10];
 	char whileLabel[10];
 	char forLabel[10];
+	char endSwitch[10];
+	char casevar[10];
+	int getcasevar=1;
 
 	int forExpr=0;
+	char funParams[10][10];
+	int numfunParams[10];
+	int IdxFunRegs=0;
+	int numError = 0;
 	
 
 %}
@@ -83,7 +95,7 @@
 %token  FUNCNAME
 %token  INC DEC 
 %token SEMICOLON COLON
-%token IF THEN CONST ELSE 
+%token IF THEN CONST ELSE ELSEIF
 %token WHILE DO UNTIL FOR SWITCH CASE DEFAULT BREAK
 %token  OPEN_Parentheses  CLOSED_Parentheses  OPEN_Brackets CLOSED_Brackets DBL_FORWARD_SLASH
 %token FALSE TRUE 
@@ -94,7 +106,7 @@
 %type  <ourinfo> factor
 %type  <ourinfo> multiple_conditions logicals AND OR
 %type  <ourinfo> condition
-%type  <ourinfo> expr
+%type  <ourinfo> expr func_call booleans TRUE FALSE
 %type  <ourinfo> expr2
 %type  <ourinfo> number
 %type  <ourinfo> math_operations
@@ -122,7 +134,6 @@ program															// Note that an empty file or file with comments only will
 	| statement	{printf("Reduced to statement\n");}
 	| statement program	{printf("Reduced to statement . program\n");}
 	| braced_block program	{printf("Reduced to braced_block . program\n");}
-	//| END {printf("end of fileeeeeeeeeee"); return;}
 	;
 
 
@@ -142,7 +153,7 @@ statement
 	| ctrl_statements
 	| return_stmt
 	| break_stmt // It must only be allowed inside loops and switch cases. 
-	| error SEMICOLON { yyerrok;}
+	| error SEMICOLON { yyerrok;numError++;}
 
 	;
 
@@ -154,12 +165,16 @@ other_statements
 
 return_stmt
 	: RETURN SEMICOLON	{printf("reduced to return_stmt\n");}
-	| RETURN expr SEMICOLON
+	| RETURN expr SEMICOLON {
+		// strcpy($$.name,$2.name);
+	}
 	;
 
 break_stmt
 	: BREAK SEMICOLON 
 	;
+
+
 
 expression_statements
 	: identifier_assignment
@@ -208,12 +223,27 @@ if_stmt
 	}
 	| IF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses  braced_block {
 		char labelTemp[10];
-		strcpy(labelTemp,label);
-		newLabel();add_quad("jmp",label," "," ");add_quad(labelTemp,"::"," "," ");
-		} ELSE braced_block {
-		printf("Reduced to if else\n");
+		strcpy(labelTemp,label); // label we use for jumping to after else if not met
+		newLabel();
+		strcpy(endSwitch,label);
+		add_quad("jmp",endSwitch," "," ");
+		add_quad(labelTemp,"::"," "," ");
+		} elseif_block {
+		//char labelTemp[10];
+		//strcpy(labelTemp,label);
+		add_quad("jmp",endSwitch," "," ");
 		add_quad(label,"::"," "," ");
-	}
+		}
+		ELSE braced_block {
+		printf("Reduced to if else\n");
+		add_quad(endSwitch,"::"," "," ");
+		}
+	;
+
+elseif_block
+	: /*empty*/
+	| ELSEIF OPEN_Parentheses  multiple_conditions dummy CLOSED_Parentheses braced_block elseif_block 
+	
 	;
 
 dummy
@@ -284,7 +314,7 @@ var_assignment
 		add_quad2("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
-		if($2.name[0]!='t'){
+		if($2.name[0]!='t' || strcmp($2.name,"true")==0 ){
 			add_quad2("=",$2.name,"-",t);
 			add_quad2("=",t,"-",$$.name);
 		}
@@ -354,34 +384,81 @@ func_decl
 	;
 
 func_def
-	: type variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
-	| VOID variable OPEN_Parentheses  func_params CLOSED_Parentheses  braced_block
+	: type variable OPEN_Parentheses func_params CLOSED_Parentheses {add_quad($2.name,"proc"," "," ");func_dummy();} braced_block{
+		//add_quad($2.name,"proc"," "," ");
+		//func_dummy();
+		write_conditionquads();
+		add_quad("push",t,"","");
+		add_quad("ret","","","");
+		add_quad($2.name,"endp"," "," ");
+		//forExpr=0;
+	}
+	| VOID variable OPEN_Parentheses func_params CLOSED_Parentheses  {add_quad($2.name,"proc"," "," ");
+		if(strcmp($2.name,"main")==1)
+			func_dummy();
+		} braced_block{
+		//func_dummy();
+		write_conditionquads();
+		add_quad("ret","","","");
+		add_quad($2.name,"endp"," "," ");	
+		//forExpr=0;
+	}
 	;
 func_params 
 	: 	/*empty*/  // for functions that have no parameters
-	| 	type variable  
-	| 	type variable multiple_func_params
+	| 	type variable {
+		memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
+		IdxFunRegs++;
+	} 
+	| 	type variable {	memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
+		IdxFunRegs++;} multiple_func_params
 	;
 
 multiple_func_params
-	: COMMA type variable 
-	| COMMA type variable multiple_func_params ;
+	: COMMA type variable {
+		memcpy(funParams[IdxFunRegs],$3.name,strlen($3.name)+1);
+		IdxFunRegs++;
+	}
+	| COMMA type variable multiple_func_params {
+		memcpy(funParams[IdxFunRegs],$3.name,strlen($3.name)+1);
+		IdxFunRegs++;
+	};
 
 
 // Function Calls
 func_call
-	: variable OPEN_Parentheses  func_call_params CLOSED_Parentheses  
+	: variable OPEN_Parentheses  func_call_params CLOSED_Parentheses  {
+		add_quad("call",$1.name," "," ");
+		add_quad("pop",p,"","");
+		strcpy($$.name,p);
+		IdxFunRegs=0;
+	}
 	;
 
 func_call_params
 	: 	/*empty*/  // for functions that have no parameters
-	| 	expr  
-	| 	expr multiple_func_call_params
+	| 	expr  {
+		newRegister();
+		add_quad("mov",p,$1.name," ");
+		add_quad("push",p,"","");
+	}
+	| 	expr {	
+		newRegister();
+		add_quad("mov",p,$1.name,"");
+		add_quad("push",p,"","");
+		} multiple_func_call_params 
 	;
 
 multiple_func_call_params
-	: COMMA expr 
-	| COMMA expr multiple_func_call_params ;
+	: COMMA expr {
+		newRegister();
+		add_quad("mov",p,$2.name,"");
+		add_quad("push",p,"","");	
+	}
+	| COMMA expr {newRegister();
+		add_quad("mov",p,$2.name,"");
+		add_quad("push",p,"","");
+	} multiple_func_call_params ;
 
 
 
@@ -405,23 +482,32 @@ for_loop
 	;
 
 
+
 multiple_cases
-	: case
-	| case multiple_cases
+	: case {;}
+	| case multiple_cases {;}
 	;
 
 case
-	: CASE expr COLON braced_block // our own assumption
+	: CASE expr COLON {	
+		add_quad("==",casevar,$2.name,t);
+		add_quad("cmp",t,"true","-");
+		newLabel();
+		add_quad("jne",label,"","");}braced_block{add_quad("jmp",endSwitch,"","");add_quad(label,"::","","");}// our own assumption
 	| DEFAULT COLON braced_block	// Restricting no. of default statements to one will be handled later
-	| CASE expr COLON statements 
+	| CASE expr COLON {
+		add_quad("==",casevar,$2.name,t);
+		add_quad("cmp",t,"true","-");
+		newLabel();
+		add_quad("jne",label,"","");
+	}statements {add_quad("jmp",endSwitch,"","");add_quad(label,"::","","");}
 	| DEFAULT COLON statements
 
 
-
-
 switch_stmt
-	: SWITCH OPEN_Parentheses  expr CLOSED_Parentheses  ob multiple_cases CLOSED_Brackets // Verify using expr here. Check increment/decrement statements
-	;
+	: SWITCH OPEN_Parentheses {newLabel(); strcpy(endSwitch,label);getcasevar=0;} expr CLOSED_Parentheses  ob multiple_cases CLOSED_Brackets // Verify using expr here. Check increment/decrement statements
+	{getcasevar=1;add_quad(endSwitch,"::","","");};
+
 type 
 	: INT  {  
 			$<ourinfo>1.type = 2 ; 
@@ -463,9 +549,10 @@ bit_operations
 	;
 
 booleans
-	: TRUE
-	| FALSE
+	: TRUE {strcpy($$.name,$1.name);}
+	| FALSE {strcpy($$.name,$1.name);}
 	;
+
 
 
 
@@ -491,8 +578,12 @@ expr
 	}
 	| expr2 {
 		strcpy($$.name,$1.name);
+		if(getcasevar==0){
+		strcpy(casevar,$1.name);
+		getcasevar=1;
+		}
 	}
-	| booleans
+	| booleans {strcpy($$.name,$1.name);}
 	;
 
 expr2
@@ -533,7 +624,9 @@ factor
 	| variable {
 		strcpy($$.name,$1.name);
 	}
-	| func_call
+	| func_call {
+		strcpy($$.name,$1.name);
+	}
 	| NOT func_call
 	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
 	;
@@ -552,6 +645,14 @@ void newtemp()
 	sprintf(temp,"%d",tIdx++);
 	strcpy(t,"t");
 	strcat(t,temp);
+	
+}
+void newRegister()
+{
+	char temp[10];
+	sprintf(temp,"%d",pIdx++);
+	strcpy(p,"p");
+	strcat(p,temp);
 	
 }
 void newLabel()
@@ -591,6 +692,15 @@ void write_conditionquads()
 }
 
 
+
+void func_dummy(){
+	for(int i=IdxFunRegs-1;i>=0;i--){
+		newRegister();
+		add_quad("pop",p," "," ");
+		add_quad("mov",funParams[i],p,"");
+	}
+}
+
 void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
 
 
@@ -617,10 +727,22 @@ void yyerror(const char *s)
 int main()
 {
 
-	yyin=fopen("loop.c","r");
-	//free(lineptr);
+	
 
-	yyout=fopen("out.txt","w");
+ 	/*char cwd[PATH_MAX];
+   	if (getcwd(cwd, sizeof(cwd)) != NULL) {
+       printf("Current working dir: %s\n", cwd);
+   	} else {
+       perror("getcwd() error");
+       return 1;
+   }
+   printf("cwdddddddd %s\n",cwd);
+
+	strcat(cwd,"\\");
+	strcat(cwd,"loop.c");*/
+	yyin=fopen("TestCases\\expressions.c","r");
+
+	yyout=fopen("Deliverables\\expressions.txt","w");
 	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
 	int yydebug=1;
 	int value;

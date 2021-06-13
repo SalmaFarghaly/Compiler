@@ -46,16 +46,46 @@ St.No	op	arg1	arg2	res
 
 23	=	0	-	t2
 
-24	=	t2	-	x
+24	=	t2	-	x1
 
 25	l5	::	 	 
 
-26	+	x	1	t2
+26	+	x1	1	t2
 
-27	=	t2	-	x
+27	=	t2	-	x1
 
-28	<	x	20	t3
+28	<	x1	20	t3
 
 29	cmp	t3	true	 
 
 30	je	l5	 	 
+
+31	==	x2	1	t3
+
+32	cmp	t3	true	-
+
+33	jne	l7		
+
+34	=	10	-	t3
+
+35	=	t3	-	x2
+
+36	jmp	l6		
+
+37	l7	::		
+
+38	==	x2	2	t3
+
+39	cmp	t3	true	-
+
+40	jne	l8		
+
+41	=	20	-	t3
+
+42	=	t3	-	x2
+
+43	jmp	l6		
+
+44	l8	::		
+
+45	l6	::		

@@ -6,7 +6,7 @@ int a=d+9,b=a*3*2;
 const int a=d+9,b=d+7;
 b++;
 
-while(a>4 && a!=5 || b<9){
+while(arwa>4 && a!=5 || b<9){
     a=b+2*2;
 }
 
