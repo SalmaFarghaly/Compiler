@@ -1,7 +1,8 @@
 
 %{	
 
-	#include "utilies.h"
+	#include "headers/utilies.h"
+	#include "headers/symbol_table.h"
 	#include<stdio.h>
 	#include<stdlib.h>
 	#include<string.h>
@@ -12,8 +13,11 @@
 
 	int globa=5;
 	int typeno;
+	int const_flag;
 	extern int yylineno;
 	void add_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
+	void add_var_to_current_scope(int const_flag, int type, char* var_name, char* initializing_val, int initializing_val_type);
+	// void newtemp();
 	void add_quad2(char op[10],char arg1[10],char arg2[10],char res[10]);
 	void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]);
 	void newtemp();
@@ -23,11 +27,14 @@
 	void func_dummy();
 	void newRegister();
 
-
+	struct identifier* search_result; 
+	int func_def_flag;
+	int func_params[100];
+	int func_params_index = 99;
 	
 
-
-
+	struct scope_tree* tree;
+	
 
 	struct quad quad[10];
 	struct quad barcedquad[100];
@@ -112,11 +119,11 @@
 %type  <ourinfo> math_operations
 %type  <ourinfo> bit_operations
 %type  <ourinfo> SUB
-%type  <ourinfo> ADD
+%type  <ourinfo> ADD func_expr
 %type  <ourinfo> XOR BitwiseAnd BitwiseOR comparsions
 %type  <ourinfo> string
-%type  <ourinfo> var_assignment multiple_var_declarations
-%type  <ourinfo> const_assignment multiple_const_declarations
+%type  <ourinfo> var_assignment multiple_var_declarations multiple_func_params
+// %type  <ourinfo> const_assignment multiple_const_declarations
 
 
 
@@ -138,9 +145,15 @@ program															// Note that an empty file or file with comments only will
 
 
 braced_block
-	: OPEN_Brackets CLOSED_Brackets
-	| OPEN_Brackets statements CLOSED_Brackets
+	: ob cb
+	| ob block_content cb
 	;
+
+block_content
+	: statements
+	| braced_block
+	| statements braced_block block_content
+	| braced_block block_content
 
 statements
 	: statement
@@ -273,26 +286,28 @@ do_while
 
 multiple_conditions
 	: condition logicals multiple_conditions{
+		$$.type = $1.type;
 		newtemp();
 		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 		strcpy(mulCondLabel,t);
 	}
 	| condition {
+		$$.type = $1.type;
 		strcpy($$.name,$1.name); 
 		strcpy(mulCondLabel,t);
 	}
 	;
 
 condition //(o/p of function or IDENTIFIER == bool )eq boolean
-	: expr {strcpy($$.name,$1.name)}
+	: expr {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| expr comparsions expr  {
 
 		newtemp();
 		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t); 
 	}
-	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses 
+	| NOT OPEN_Parentheses  expr logicals expr CLOSED_Parentheses
 	| NOT OPEN_Parentheses  expr comparsions expr CLOSED_Parentheses 
 	| NOT variable
 	;
@@ -303,17 +318,21 @@ logicals
 	;
 
 var_declaration
-	: type variable var_assignment 
-	| type variable var_assignment multiple_var_declarations
+	: type variable var_assignment { add_var_to_current_scope(const_flag, $<ourinfo>1.type, $2.name, $3.name, $3.type); const_flag = 0;}
+	| type variable var_assignment multiple_var_declarations { add_var_to_current_scope(const_flag, $<ourinfo>1.type, $2.name, $3.name, $3.type); const_flag = 0;}
 	;
 
 var_assignment
-	: /*empty*/  //for declaring variables without assigning it
+	: /*empty*/  /*for declaring variables without assigning it*/ {$$.type = -1}
 	| ASSIGN string {
+		strcpy($$.name, $2.name);
+		$$.type = $2.type;
 		add_quad2("=",$2.name,"-",t);
 		add_quad2("=",t,"-",$$.name);
 	}
     | ASSIGN multiple_conditions {
+		strcpy($$.name, $2.name);
+		$$.type = $2.type;
 		if($2.name[0]!='t' || strcmp($2.name,"true")==0 ){
 			add_quad2("=",$2.name,"-",t);
 			add_quad2("=",t,"-",$$.name);
@@ -324,46 +343,72 @@ var_assignment
 	;
 
 multiple_var_declarations
-	: COMMA variable var_assignment {strcpy($$.name,$2.name);}
-	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);}
+	: COMMA variable var_assignment {strcpy($$.name,$2.name); 
+									 add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
+									}
+	| COMMA variable var_assignment multiple_var_declarations {strcpy($$.name,$2.name);
+																add_var_to_current_scope(const_flag, typeno, $2.name, $3.name, $3.type);
+																}
 	;
 
+const_modifier: CONST {const_flag = 1;}
+const_declaration: const_modifier var_declaration
+// const_declaration
+// 	: CONST type variable const_assignment  
+// 	| CONST type variable const_assignment multiple_const_declarations 
+// 	;
 
-const_declaration
-	: CONST type variable const_assignment 
-	| CONST type variable const_assignment multiple_const_declarations 
-	;
+// multiple_const_declarations
+// 	: COMMA variable const_assignment {strcpy($$.name,$2.name);}
+// 	| COMMA variable const_assignment multiple_const_declarations {strcpy($$.name,$2.name);}
+// 	;
 
-multiple_const_declarations
-	: COMMA variable const_assignment {strcpy($$.name,$2.name);}
-	| COMMA variable const_assignment multiple_const_declarations {strcpy($$.name,$2.name);}
-	;
+// const_assignment
+// 	: ASSIGN multiple_conditions {
+// 		//add_quad("=",$2.name,"-",t);
+// 		add_quad("=",$2.name,"-",$$.name);
+// 	}
+// 	| ASSIGN string {
+// 		add_quad("=",$2.name,"-",t);
+// 		add_quad("=",t,"-",$$.name);
+// 	}
 
-const_assignment
-	: ASSIGN multiple_conditions {
-		//add_quad2("=",$2.name,"-",$$.name);
-		if($2.name[0]!='t'){
-			add_quad2("=",$2.name,"-",t);
-			add_quad2("=",t,"-",$$.name);
-		}
-		else
-			add_quad2("=",$2.name,"-",$$.name);
-	}
-	| ASSIGN string {
-		add_quad2("=",$2.name,"-",t);
-		add_quad2("=",t,"-",$$.name);
-	}
-
-	;
+// 	;
 
 identifier_assignment
 	: variable ASSIGN string { 
+		search_result = search_tree(tree, $1.name);
 
+		if( search_result == NULL){
+			printf("Error : Undeclared Variable %s\n", $1.name);
+			print(tree->current_scope);
+		}
+		else if(search_result->attr->type == $3.type ){
+			strcpy(search_result->attr->value, $3.name);
+			print(tree->current_scope);
+		}
+		else{
+			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+		}
 		add_quad2("=",$3.name,"-",t);
 		add_quad2("=",t,"-",$1.name);
 		}
 	| variable ASSIGN multiple_conditions {
+		search_result = search_tree(tree, $1.name);
 
+		if( search_result == NULL){
+			printf("Error : Undeclared Variable %s\n", $1.name);
+			print(tree->current_scope);
+		}
+		else if(search_result->attr->type == $3.type ){
+			strcpy(search_result->attr->value, $3.name);
+			print(tree->current_scope);
+		}
+		else{
+			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+		}
+
+		// Quads
 		if($3.name[0]!='t'){
 			add_quad2("=",$3.name,"-",t);
 			add_quad2("=",t,"-",$1.name);
@@ -374,8 +419,30 @@ identifier_assignment
 	;
 
 
-ob: OPEN_Brackets {/* handle beginning of new scope */ printf("new scope\n");};
+ob: OPEN_Brackets { 
+					if(func_def_flag == 0){
+					create_scope(tree); printf("New Scope\n");
+					}
+					else{
+						func_def_flag = 0; printf("New Function Scope\n");
+					}
+				}
+				;
 
+cb: CLOSED_Brackets { 
+						struct identifier* curr = tree->current_scope->head;
+						while(curr != NULL){
+							if(curr->attr->no_of_usages == 0){
+								char *buf = malloc(128);
+								sprintf(buf, "Warning : Variable %s is unused.\n", curr->attr->name);
+								yyerror(buf);
+							}
+							curr = curr->next;
+
+						}
+						close_current_scope(tree);
+
+					 };
 
 // Function Declaration and Definition
 func_decl
@@ -392,26 +459,80 @@ func_def
 		add_quad("ret","","","");
 		add_quad($2.name,"endp"," "," ");
 		//forExpr=0;
+
+		//------------------
+		append(tree->current_scope, $2.name, FUNC, $<ourinfo>1.type, 0, "N/A");
+		struct identifier* func_row = search(tree->current_scope, $2.name);
+
+		printf("Reading the parameters of function of name %s\n", $2.name);
+
+		for( int i = 0; i < 100; i++){
+			func_row->attr->params[i] = -1; 
+		}
+		// Find last child of current scope
+		struct symbol_table* curr = tree->current_scope->first_child;
+		while(curr->next_sibling != NULL){
+
+			curr = curr->next_sibling;
+		}
+
+		struct identifier* id = curr->head;
+		i = 99;
+		while(i>=0 && id != NULL && id->attr->kind == PAR){
+			func_row->attr->params[i] = id->attr->type;
+			printf("Parameter No. %d : %s\n",i, types[func_row->attr->params[i]]);
+			id = id->next;
+			i--;
+		}
+
+		print(tree->current_scope);
 	}
-	| VOID variable OPEN_Parentheses func_params CLOSED_Parentheses  {add_quad($2.name,"proc"," "," ");
-		if(strcmp($2.name,"main")==1)
-			func_dummy();
+	| VOID variable OPEN_Parentheses func_params {printf("arwaaaaaa");}CLOSED_Parentheses  
+		{
+			add_quad($2.name,"proc"," "," ");
+			if(strcmp($2.name,"main")==1)
+				func_dummy();
 		} braced_block{
-		//func_dummy();
-		write_conditionquads();
-		add_quad("ret","","","");
-		add_quad($2.name,"endp"," "," ");	
-		//forExpr=0;
-	}
+			//func_dummy();
+			write_conditionquads();
+			add_quad("ret","","","");
+			add_quad($2.name,"endp"," "," ");	
+			//forExpr=0;
+
+			//-------------------------
+			append(tree->current_scope, $2.name, FUNC, type_void, 0, "N/A");
+		struct identifier* func_row = search(tree->current_scope, $2.name);
+		for( int i = 0; i < 100; i++){
+			func_row->attr->params[i] = -1; 
+		}
+		// Find last child of current scope
+		struct symbol_table* curr = tree->current_scope->first_child;
+		while(curr->next_sibling != NULL){
+			curr = curr->next_sibling;
+		}
+
+		struct identifier* id = curr->head;
+		i = 99;
+		while(id->attr->kind != PAR){
+			func_row->attr->params[i] = id->attr->type;
+			printf("Parameter No. %d : %s",i, types[func_row->attr->params[i]]);
+			id = id->next;
+			i--;
+		}
+		print(tree->current_scope);
+		}
 	;
 func_params 
-	: 	/*empty*/  // for functions that have no parameters
+	: 	/*empty*/ {printf("awaaaaaaa\n");func_def_flag = 1; printf("awaaaaaaa\n");create_scope(tree);printf("2awaaaaaaa\n");} // for functions that have no parameters
 	| 	type variable {
 		memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
 		IdxFunRegs++;
+		func_def_flag = 1; create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");
 	} 
-	| 	type variable {	memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
-		IdxFunRegs++;} multiple_func_params
+	| 	type variable {
+			memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
+			IdxFunRegs++;
+			} multiple_func_params{append(tree->current_scope, $4.name, PAR, $<ourinfo>2.type, 0, "N/A");}
 	;
 
 multiple_func_params
@@ -432,34 +553,88 @@ func_call
 		add_quad("pop",p,"","");
 		strcpy($$.name,p);
 		IdxFunRegs=0;
+		search_result = search_tree(tree, $1.name);
+		if(search_result == NULL){
+			char *buf = malloc(128);
+			sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+			yyerror(buf);
+			return 1;
+		}
+		else{
+			// Check alignment of parameter types with function header
+			i = 99;
+			while(search_result->attr->params[i] != -1){ i--;}
+			int count_header = 99 - i;
+
+			i = 99;
+			while(func_params[i] != -1){ i--;}
+			int count_call = 99 - i;
+
+			if(count_header - count_call > 0){
+				char *buf = malloc(128);
+				sprintf(buf, "Error : Function %s got too few arguments.\n", $1.name);
+				yyerror(buf);
+				return 1;
+			}
+			else if(count_header - count_call < 0){
+				char *buf = malloc(128);
+				sprintf(buf, "Error : Function %s got too many arguments.\n", $1.name);
+				yyerror(buf);
+				return 1;
+			}
+
+
+			for(int i = 99; i>=0; i--){
+				if(search_result->attr->params[i] != func_params[i]){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Incorrect parameter type. Expected %s but got %s.\n", types[search_result->attr->params[i]], types[func_params[i]]);
+					yyerror(buf);
+			
+					return 1;
+				}
+			}
+
+			strcpy($<ourinfo>$.name,search_result->attr->name);
+			$<ourinfo>$.type = search_result->attr->type;
+
+			for( int i = 0; i < 100; i++){
+				func_params[i] = -1; 
+			}
+		}
 	}
 	;
 
 func_call_params
 	: 	/*empty*/  // for functions that have no parameters
-	| 	expr  {
+	| 	func_expr  {
 		newRegister();
 		add_quad("mov",p,$1.name," ");
 		add_quad("push",p,"","");
+		func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99;
 	}
-	| 	expr {	
+	| 	func_expr {	
 		newRegister();
 		add_quad("mov",p,$1.name,"");
 		add_quad("push",p,"","");
-		} multiple_func_call_params 
+		} multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99;}
 	;
 
 multiple_func_call_params
-	: COMMA expr {
+	: COMMA func_expr {
 		newRegister();
 		add_quad("mov",p,$2.name,"");
 		add_quad("push",p,"","");	
+		func_params[func_params_index--] = $<ourinfo>2.type;
 	}
-	| COMMA expr {newRegister();
+	| COMMA func_expr {newRegister();
 		add_quad("mov",p,$2.name,"");
 		add_quad("push",p,"","");
-	} multiple_func_call_params ;
+	} multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>2.type;} ;
 
+func_expr
+	: expr {strcpy($$.name,$1.name);}
+	| string {strcpy($$.name,$1.name);}
+	;
 
 
 
@@ -505,28 +680,19 @@ case
 
 
 switch_stmt
-	: SWITCH OPEN_Parentheses {newLabel(); strcpy(endSwitch,label);getcasevar=0;} expr CLOSED_Parentheses  ob multiple_cases CLOSED_Brackets // Verify using expr here. Check increment/decrement statements
+	: SWITCH OPEN_Parentheses {newLabel(); strcpy(endSwitch,label);getcasevar=0;} expr CLOSED_Parentheses  ob multiple_cases cb // Verify using expr here. Check increment/decrement statements
 	{getcasevar=1;add_quad(endSwitch,"::","","");};
 
 type 
-	: INT  {  
-			$<ourinfo>1.type = 2 ; 
-			$<ourinfo>$=$<ourinfo>1; 
-			typeno=2;
-			printf("type1:%d,type2:%d\n",$<ourinfo>1.type,$<ourinfo>$);
-		}
-	| CHAR {  
-			$<ourinfo>1.type = 1 ; 
-			$<ourinfo>$=$<ourinfo>1; 
-			typeno=1;
-		}
-	| FLOAT   {  $<ourinfo>1.type = 3 ; $<ourinfo>$=$<ourinfo>1; typeno=3;}
-	| STRING  {  $<ourinfo>1.type = 0 ; $<ourinfo>$=$<ourinfo>1; typeno=4;}
-	| BOOL    {  $<ourinfo>1.type = 4 ; $<ourinfo>$=$<ourinfo>1; typeno=5;} 
+	: INT	{ $<ourinfo>$.type = type_int; typeno = type_int;}
+	| CHAR	{ $<ourinfo>$.type = type_char; typeno = type_char;}
+	| FLOAT	{ $<ourinfo>$.type = type_float; typeno = type_float;}
+	| STRING	{ $<ourinfo>$.type = type_string; typeno = type_string;}
+	| BOOL	{ $<ourinfo>$.type = type_bool; typeno = type_bool;}
 	;
 
 variable
-	: IDENTIFIER {strcpy($<ourinfo>$.name, $<ourinfo>1.name); $<ourinfo>$.type=typeno;  printf("%s\n",$<ourinfo>$.name); printf("%d\n",$<ourinfo>$.type); }
+	: IDENTIFIER {strcpy($$.name, $1.name);}
 	;
 	
 comparsions
@@ -557,13 +723,13 @@ booleans
 
 
 number
-	: NUM	 {strcpy($$.name,$1.name);}
-	| DECIMAL	 {strcpy($$.name,$1.name);}
+	: NUM	 {strcpy($$.name,$1.name); $$.type = type_int;}
+	| DECIMAL	 {strcpy($$.name,$1.name); $$.type = type_float;}
 	;
 	
 string
-	: EXPSTR {strcpy($$.name,$1.name);}
-	| EXPCHAR {strcpy($$.name,$1.name);}
+	: EXPSTR {strcpy($$.name,$1.name); $$.type = type_string;}
+	| EXPCHAR {strcpy($$.name,$1.name); $$.type = type_char;}
 	;
 
 math_operations
@@ -572,8 +738,8 @@ math_operations
 	;
 
 expr 
-    : expr bit_operations expr2 {
-		add_quad2($2.name,$1.name,$3.name,t);
+    : expr bit_operations expr2 { // Should we limit bitwise operations to integer values only?
+		add_quad($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
 	}
 	| expr2 {
@@ -590,11 +756,13 @@ expr2
 	: expr2  math_operations term {
 		add_quad2($2.name,$1.name,$3.name,t);
 		strcpy($$.name,t);
+		if($1.type == type_float || $3.type == type_float){
+			$$.type = type_float;
+		} else{
+			$$.type = type_int;
+		}
 	}
-	|  term  {
-
-		strcpy($$.name,$1.name);
-	}
+	|  term  {strcpy($$.name,$1.name); $$.type = $1.type;}
 	;
 
 
@@ -603,32 +771,51 @@ term
 
 		add_quad2("*",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		if($1.type == type_float || $<ourinfo>2.type == type_float){
+			$$.type = type_float;
+		} else{
+			$$.type = type_int;
+		}
 	}
 	| term DIV factor {
 		add_quad2("/",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		$$.type = type_float;
 	}
 	| term REM factor{
 		add_quad2("%",$1.name,$3.name,t);
 		strcpy($$.name,t);
+		$$.type = type_int;
 	}
-	| factor {
-		strcpy($$.name,$1.name);
-	}
+	| factor {strcpy($$.name,$1.name); $$.type=$1.type;}
 	;
 
-factor 
-	: number {
-		strcpy($$.name,$1.name);
-	}
+factor
+	: number {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| variable {
-		strcpy($$.name,$1.name);
-	}
-	| func_call {
-		strcpy($$.name,$1.name);
-	}
-	| NOT func_call
-	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name);}
+				search_result = search_tree(tree, $1.name);
+				if(search_result == NULL){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+					yyerror(buf);
+					return 1;
+				}
+				else if(strcmp(search_result->attr->value, "N/A") == 0){
+					char *buf = malloc(128);
+					sprintf(buf, "Error : Uninitialized Variable %s\n", $1.name);
+					yyerror(buf);
+					return 1;
+
+				}
+				else {
+					strcpy($$.name,search_result->attr->value);
+					$$.type = search_result->attr->type;
+					search_result->attr->no_of_usages++;
+				}
+				}
+	| func_call { strcpy($$.name,$<ourinfo>1.name); $$.type = $<ourinfo>1.type;}
+	| NOT func_call  //do we need to check if function return type is bool?
+	| OPEN_Parentheses  expr CLOSED_Parentheses {strcpy($$.name,$2.name); $$.type = $2.type;}
 	;
 
 
@@ -637,6 +824,7 @@ factor
 
 extern FILE *yyin;
 extern FILE* yyout;
+extern FILE*yyerr;
 
 //to create new variable 't'
 void newtemp()
@@ -715,6 +903,8 @@ void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
 void yyerror(const char *s)
 {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
+	//fprintf(yyout, "line %d: %s\n", yylineno, s);
+	fprintf(stderr,"Found %d error(s)",numError);
 
 }
 
@@ -726,41 +916,71 @@ void yyerror(const char *s)
 
 int main()
 {
+	yyin=fopen("c_files/input2.c","r");
+//	yyin=fopen("expressions.c","r");
 
-	
-
- 	/*char cwd[PATH_MAX];
-   	if (getcwd(cwd, sizeof(cwd)) != NULL) {
-       printf("Current working dir: %s\n", cwd);
-   	} else {
-       perror("getcwd() error");
-       return 1;
-   }
-   printf("cwdddddddd %s\n",cwd);
-
-	strcat(cwd,"\\");
-	strcat(cwd,"loop.c");*/
-	yyin=fopen("TestCases\\expressions.c","r");
-
-	yyout=fopen("Deliverables\\expressions.txt","w");
+	yyout=fopen("expressions.txt","w");
+	//yyerr=fopen("Deliverables\\expressionserror.txt","w");
 	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
+	
+	// Initialize Tree with global symbol table
+	tree = malloc(sizeof(struct scope_tree));
+	tree->root = malloc(sizeof(struct symbol_table));
+	tree->current_scope =tree->root;
+	print(tree->current_scope);
+
+	// Initialize array that receives function params
+	for( int i = 0; i < 100; i++){
+		func_params[i] = -1; 
+	}
+
 	int yydebug=1;
 	int value;
 	value = yyparse();
 
-	if(value == 0){
+	struct identifier* curr = tree->root->head;
+	while(curr != NULL){
+		if(curr->attr->no_of_usages == 0){
+			char *buf = malloc(128);
+			sprintf(buf, "Warning : Variable %s is unused.\n", curr->attr->name);
+			yyerror(buf);
+		}
+		curr = curr->next;
+	}
+	if(value == 0 && numError==0){
 		printf("Parsing Successful.\n");
 		//display();
 	}
 	else{
 		printf("Parsing Unsuccessful.\n");
+		fprintf(stderr,"Found %d error(s)\n",numError);
 	}
 
-
+	//fprintf(yyerr,"Found %d error(s)\n",numError);
+	char* y;
+	scanf("%s", &y);
 	fclose(yyin);
 	return 0;
 }
 
 
-
-
+void add_var_to_current_scope(int const_flag, int type, char* var_name, char* initializing_val, int initializing_val_type)
+{
+	if (search(tree->current_scope, var_name) != NULL) 
+	{ //Search for variable name only in current scope
+		printf("Error: Re-declaration of existing variable %s\n", var_name); 
+	} 
+	else if (initializing_val_type == -1)
+	{
+		append(tree->current_scope, var_name, VAR, type, const_flag,  "N/A");
+	} 
+	else if(type == initializing_val_type)
+	{ // If non-existent, append it to current scope
+		append(tree->current_scope, var_name, VAR, type, const_flag, initializing_val);
+	}
+	else
+	{
+		printf("Error: Mismatched initializing value of type %s for variable %s of type %s\n", types[initializing_val_type], var_name, types[type]); 
+	}
+	print(tree->current_scope);
+}

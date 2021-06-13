@@ -76,7 +76,7 @@ a--;
 // gh>4;
 bool y;
 bool g = b && d;
-//const bool g = b||d;
+const bool g = b||d;
 const bool ggg = b|d;
 if(y==true && y>5 || gh>4 && true){
     int a=3+b&5;
@@ -86,10 +86,10 @@ a=! x(2);
 if(! x(2)){
     int a=1;
 }
-//bool c=!d;
-//bool g = !(b&&d);
-//bool f=!(b!=d);
-//dbool f=!(b>d);
+bool c=!d;
+bool g = !(b&&d);
+bool f=!(b!=d);
+bool f=!(b>d);
 int a=3*b|5;
 b=a*h^6;
 c=a|z;

@@ -1,3 +1,4 @@
+<<<<<<< HEAD:Deliverables/loops.txt
 St.No	op	arg1	arg2	res
 
 1	=	0	-	t
@@ -89,3 +90,5 @@ St.No	op	arg1	arg2	res
 44	l8	::		
 
 45	l6	::		
+=======
+>>>>>>> f5bb1fb23d6aa0ca8f979363bbb33066ee2be78d:out.txt

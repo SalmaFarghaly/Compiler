@@ -1,6 +1,6 @@
 %{
 
-	#include "utilies.h"
+	#include "headers/utilies.h"
     #include"prog.tab.h"
 	#include<stdio.h>
 	#include <errno.h>
@@ -94,7 +94,7 @@ comment_str \/\/[^\n]*
 
 [ \t] ;
 [\n] ;
-.					printf("unexpected character\n");
+.	
 
 
 %%
