@@ -8,3 +8,4 @@ prog(1).y
 .vs
 new.c
 *.txt
+*.stackdump

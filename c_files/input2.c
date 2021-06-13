@@ -20,10 +20,11 @@
 // int a  = b * 1 + c;
 
 // float a = 1.0;
-{
+// {
+    {
 int b=1;
 int a = b;
-}
+// }
 // int test = add(b, 1.0, 1.0);
 // {}
 // int add( int x, float y, float z){
@@ -37,3 +38,8 @@ int a = b;
 //     return 2;
 // }
 
+if(a){
+    b =1;
+}
+
+    }

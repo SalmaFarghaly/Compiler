@@ -147,14 +147,14 @@ braced_block
 	;
 
 block_content
-	: statements
+	: statements 
 	| braced_block
 	| statements braced_block block_content
 	| braced_block block_content
 
 statements
-	: statement
-	| statement statements 
+	: statement 
+	| statement statements {printf("reduced to statements\n");}
 	;
 
 statement
@@ -449,7 +449,7 @@ func_def
 		i = 99;
 		while(i>=0 && id != NULL && id->attr->kind == PAR){
 			func_row->attr->params[i] = id->attr->type;
-			printf("Parameter No. %d : %s\n",i, types[func_row->attr->params[i]]);
+			printf("Parameter No. %d : %s\n",99 - i, types[func_row->attr->params[i]]);
 			id = id->next;
 			i--;
 		}
@@ -483,8 +483,8 @@ func_def
 	;
 func_params 
 	: 	/*empty*/  {func_def_flag = 1; create_scope(tree);}// for functions that have no parameters
-	| 	type variable  { func_def_flag = 1; create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");}
-	| 	type variable multiple_func_params { append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A"); }
+	| 	type variable  { func_def_flag = 1; create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A"); print(tree->current_scope);}
+	| 	type variable multiple_func_params { append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");  print(tree->current_scope);}
 	;
 
 multiple_func_params
@@ -570,7 +570,7 @@ for_multiple_conditions: | multiple_conditions;
 for_expression_statements: | expression_statements;
 
 for_loop
-	: FOR OPEN_Parentheses for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
+	: FOR OPEN_Parentheses  {func_def_flag = 1;} for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
 	SEMICOLON for_multiple_conditions {
 		  add_quad("cmp",t,"true"," ");
 		  newLabel();
@@ -712,7 +712,7 @@ factor
 					yyerror(buf);
 					return 1;
 				}
-				else if(strcmp(search_result->attr->value, "N/A") == 0){
+				else if(strcmp(search_result->attr->value, "N/A") == 0 && search_result->attr->kind != PAR ){
 					char *buf = malloc(128);
 					sprintf(buf, "Error : Uninitialized Variable %s\n", $1.name);
 					yyerror(buf);
@@ -806,9 +806,11 @@ void yyerror(const char *s)
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
-	yyin=fopen("c_files/input2.c","r");
+	printf("%s", argv[1]);
+
+	yyin=fopen(argv[1],"r");
 	//free(lineptr);
 
 	yyout=fopen("out.txt","w");
