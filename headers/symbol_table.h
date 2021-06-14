@@ -44,18 +44,36 @@ struct scope_tree{
 
 // Linked List functions
 
+void print_to_file(struct symbol_table* table, FILE* file){
+	struct identifier* curr = table->head;
+	if (curr == NULL) {
+		fprintf(file, "Empty symbol table.\n");
+
+	}
+	else{
+		fprintf(file, "Name \t Kind \t Type \t Const \n------------------------------------------\n");
+		while (curr != NULL){
+			fprintf(file, "%s \t %s \t %s \t %s \t\n", curr->attr->name, kinds[curr->attr->kind], types[curr->attr->type], 
+			bool_str[curr->attr->const_flag]);
+			curr = curr->next;
+		}
+		fprintf(file,"\n\n");
+	
+	}
+}
+
 void print(struct symbol_table* table){
 	struct identifier* curr = table->head;
 	if (curr == NULL) {
 		printf("Empty symbol table.\n");
 	}
 	else{
-		printf("Name \t Kind \t Type \t Const \t Value \n------------------------------------------\n");
+		printf("Name \t Kind \t Type \t Const \n------------------------------------------\n");
 		while (curr != NULL){
 			printf("%s \t %s \t %s \t %s \t", curr->attr->name, kinds[curr->attr->kind], types[curr->attr->type], 
 			bool_str[curr->attr->const_flag]);
 			if(curr->attr->kind == VAR){
-				printf("%s \n",  (char*)curr->attr->value);
+				printf("%s \n\n",  (char*)curr->attr->value);
 				// switch(curr->attr->type){
 				// 	case type_char: printf("%c \n", *(char*)curr->attr->value); break;
 				// 	case type_float: printf("%f \n", *(float*)curr->attr->value); break;

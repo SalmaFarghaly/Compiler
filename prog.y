@@ -1,9 +1,9 @@
 
 %{	
 
-	#include "headers/utilies.h"
 	#include "headers/symbol_table.h"
 	#include<stdio.h>
+	#include "headers/utilies.h"
 	#include<stdlib.h>
 	#include<string.h>
 	#include <unistd.h>
@@ -33,8 +33,6 @@
 	int func_params_index = 99;
 	
 
-	struct scope_tree* tree;
-	
 
 	struct quad quad[10];
 	struct quad barcedquad[100];
@@ -44,6 +42,8 @@
 	char t[10]="t";
 	char p[10]="p";
 	int tIdx=1;
+	
+
 
 	int labelIdx=1;
 	char label[10]="l";
@@ -66,6 +66,9 @@
 	int IdxFunRegs=0;
 	int numError = 0;
 	
+	struct scope_tree* tree;
+	struct symbol_table* main_symbol_table;
+	struct symbol_table* prev_symbol_table;
 
 %}
 %union {
@@ -150,14 +153,14 @@ braced_block
 	;
 
 block_content
-	: statements
+	: statements 
 	| braced_block
 	| statements braced_block block_content
 	| braced_block block_content
 
 statements
-	: statement
-	| statement statements 
+	: statement 
+	| statement statements {printf("reduced to statements\n");}
 	;
 
 statement
@@ -325,13 +328,12 @@ var_declaration
 var_assignment
 	: /*empty*/  /*for declaring variables without assigning it*/ {$$.type = -1}
 	| ASSIGN string {
-		strcpy($$.name, $2.name);
 		$$.type = $2.type;
 		add_quad2("=",$2.name,"-",t);
 		add_quad2("=",t,"-",$$.name);
+		strcpy($$.name, $2.name);
 	}
     | ASSIGN multiple_conditions {
-		strcpy($$.name, $2.name);
 		$$.type = $2.type;
 		if($2.name[0]!='t' || strcmp($2.name,"true")==0 ){
 			add_quad2("=",$2.name,"-",t);
@@ -339,6 +341,8 @@ var_assignment
 		}
 		else
 			add_quad2("=",$2.name,"-",$$.name);
+		
+		strcpy($$.name, $2.name);
 	}
 	;
 
@@ -380,7 +384,9 @@ identifier_assignment
 		search_result = search_tree(tree, $1.name);
 
 		if( search_result == NULL){
-			printf("Error : Undeclared Variable %s\n", $1.name);
+			char *buf = malloc(128);
+			sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+			yyerror(buf);
 			print(tree->current_scope);
 		}
 		else if(search_result->attr->type == $3.type ){
@@ -388,7 +394,9 @@ identifier_assignment
 			print(tree->current_scope);
 		}
 		else{
-			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+			char *buf = malloc(128);
+			sprintf(buf,"Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+			yyerror(buf);
 		}
 		add_quad2("=",$3.name,"-",t);
 		add_quad2("=",t,"-",$1.name);
@@ -397,7 +405,9 @@ identifier_assignment
 		search_result = search_tree(tree, $1.name);
 
 		if( search_result == NULL){
-			printf("Error : Undeclared Variable %s\n", $1.name);
+			char *buf = malloc(128);
+			sprintf(buf, "Error : Undeclared Variable %s\n", $1.name);
+			yyerror(buf);
 			print(tree->current_scope);
 		}
 		else if(search_result->attr->type == $3.type ){
@@ -405,11 +415,13 @@ identifier_assignment
 			print(tree->current_scope);
 		}
 		else{
-			printf("Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+			char *buf = malloc(128);
+			sprintf(buf,"Error : Expected assignment value of type %s, but got a type %s\n", types[search_result->attr->type], types[$3.type]);
+			yyerror(buf);
 		}
 
 		// Quads
-		if($3.name[0]!='t'){
+		if($3.name[0]!='t'|| strcmp($3.name,"true")==0 ){
 			add_quad2("=",$3.name,"-",t);
 			add_quad2("=",t,"-",$1.name);
 		}
@@ -440,6 +452,9 @@ cb: CLOSED_Brackets {
 							curr = curr->next;
 
 						}
+						print(tree->current_scope);
+						printf("closing the scope\n");
+						prev_symbol_table = tree->current_scope;
 						close_current_scope(tree);
 
 					 };
@@ -451,43 +466,56 @@ func_decl
 	;
 
 func_def
-	: type variable OPEN_Parentheses func_params CLOSED_Parentheses {add_quad($2.name,"proc"," "," ");func_dummy();} braced_block{
-		//add_quad($2.name,"proc"," "," ");
-		//func_dummy();
-		write_conditionquads();
-		add_quad("push",t,"","");
-		add_quad("ret","","","");
-		add_quad($2.name,"endp"," "," ");
-		//forExpr=0;
+	: type variable OPEN_Parentheses func_params CLOSED_Parentheses {add_quad($2.name,"proc"," "," ");func_dummy();} 
+		braced_block	{
+						//add_quad($2.name,"proc"," "," ");
+						//func_dummy();
+						write_conditionquads();
+						add_quad("push",t,"","");
+						add_quad("ret","","","");
+						add_quad($2.name,"endp"," "," ");
+						//forExpr=0;
 
-		//------------------
-		append(tree->current_scope, $2.name, FUNC, $<ourinfo>1.type, 0, "N/A");
-		struct identifier* func_row = search(tree->current_scope, $2.name);
+						//------------------
+						// Check if same function is defined before
+						search_result = search_tree(tree, $2.name);
+						if(search_result != NULL && search_result->attr->type){
+							char *buf = malloc(128);
+							sprintf(buf, "Error : Re-declaration of existing function %s\n", $2.name);
+							yyerror(buf);
+							return 1;
+						}	
 
-		printf("Reading the parameters of function of name %s\n", $2.name);
+						append(tree->current_scope, $2.name, FUNC, $<ourinfo>1.type, 0, "N/A");
+						if (strcmp($2.name, "main") == 0){
+							main_symbol_table = prev_symbol_table;
+						}
+						struct identifier* func_row = search(tree->current_scope, $2.name);
 
-		for( int i = 0; i < 100; i++){
-			func_row->attr->params[i] = -1; 
-		}
-		// Find last child of current scope
-		struct symbol_table* curr = tree->current_scope->first_child;
-		while(curr->next_sibling != NULL){
+						printf("Reading the parameters of function of name %s\n", $2.name);
 
-			curr = curr->next_sibling;
-		}
+						for( int i = 0; i < 100; i++){
+							func_row->attr->params[i] = -1; 
+						}
+						// Find last child of current scope
+						struct symbol_table* curr = tree->current_scope->first_child;
+						while(curr->next_sibling != NULL){
 
-		struct identifier* id = curr->head;
-		i = 99;
-		while(i>=0 && id != NULL && id->attr->kind == PAR){
-			func_row->attr->params[i] = id->attr->type;
-			printf("Parameter No. %d : %s\n",i, types[func_row->attr->params[i]]);
-			id = id->next;
-			i--;
-		}
+							curr = curr->next_sibling;
+						}
 
-		print(tree->current_scope);
+						struct identifier* id = curr->head;
+						i = 99;
+						while(i>=0 && id != NULL && id->attr->kind == PAR){
+							func_row->attr->params[i] = id->attr->type;
+							printf("Parameter No. %d : %s\n",99 - i, types[func_row->attr->params[i]]);
+							id = id->next;
+							i--;
+						}
+
+						print(tree->current_scope);
 	}
-	| VOID variable OPEN_Parentheses func_params {printf("arwaaaaaa");}CLOSED_Parentheses  
+	| VOID variable OPEN_Parentheses func_params CLOSED_Parentheses  
 		{
 			add_quad($2.name,"proc"," "," ");
 			if(strcmp($2.name,"main")==1)
@@ -500,49 +528,73 @@ func_def
 			//forExpr=0;
 
 			//-------------------------
+			search_result = search_tree(tree, $2.name);
+			if(search_result != NULL && search_result->attr->type){
+				char *buf = malloc(128);
+				sprintf(buf, " Error : Re-declaration of existing function %s\n", $2.name);
+				yyerror(buf);
+				return 1;
+			}	
+			
 			append(tree->current_scope, $2.name, FUNC, type_void, 0, "N/A");
-		struct identifier* func_row = search(tree->current_scope, $2.name);
-		for( int i = 0; i < 100; i++){
-			func_row->attr->params[i] = -1; 
-		}
-		// Find last child of current scope
-		struct symbol_table* curr = tree->current_scope->first_child;
-		while(curr->next_sibling != NULL){
-			curr = curr->next_sibling;
-		}
+			if (strcmp($2.name, "main") == 0){
+				main_symbol_table = prev_symbol_table;
+			}
+			struct identifier* func_row = search(tree->current_scope, $2.name);
 
-		struct identifier* id = curr->head;
-		i = 99;
-		while(id->attr->kind != PAR){
-			func_row->attr->params[i] = id->attr->type;
-			printf("Parameter No. %d : %s",i, types[func_row->attr->params[i]]);
-			id = id->next;
-			i--;
-		}
-		print(tree->current_scope);
+			printf("Reading the parameters of function of name %s\n", $2.name);
+
+			for( int i = 0; i < 100; i++){
+				func_row->attr->params[i] = -1; 
+			}
+			// Find last child of current scope
+			struct symbol_table* curr = tree->current_scope->first_child;
+			while(curr->next_sibling != NULL){
+
+				curr = curr->next_sibling;
+			}
+
+			struct identifier* id = curr->head;
+			i = 99;
+			while(i>=0 && id != NULL && id->attr->kind == PAR){
+				func_row->attr->params[i] = id->attr->type;
+				printf("Parameter No. %d : %s\n",99 - i, types[func_row->attr->params[i]]);
+				id = id->next;
+				i--;
+			}
+
+			print(tree->current_scope);
 		}
 	;
 func_params 
-	: 	/*empty*/ {printf("awaaaaaaa\n");func_def_flag = 1; printf("awaaaaaaa\n");create_scope(tree);printf("2awaaaaaaa\n");} // for functions that have no parameters
+	: 	/*empty*/ {func_def_flag = 1; create_scope(tree);} // for functions that have no parameters
 	| 	type variable {
 		memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
 		IdxFunRegs++;
-		func_def_flag = 1; create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");
+		
+		func_def_flag = 1; 
+		create_scope(tree); append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A"); print(tree->current_scope);
 	} 
 	| 	type variable {
 			memcpy(funParams[IdxFunRegs],$2.name,strlen($2.name)+1);
 			IdxFunRegs++;
-			} multiple_func_params{append(tree->current_scope, $4.name, PAR, $<ourinfo>2.type, 0, "N/A");}
+			} multiple_func_params{ func_def_flag = 1; 
+			append(tree->current_scope, $2.name, PAR, $<ourinfo>1.type, 0, "N/A");  print(tree->current_scope);
+			}
 	;
 
 multiple_func_params
 	: COMMA type variable {
 		memcpy(funParams[IdxFunRegs],$3.name,strlen($3.name)+1);
 		IdxFunRegs++;
+		create_scope(tree); 
+		append(tree->current_scope, $<ourinfo>3.name, PAR, $<ourinfo>2.type, 0, "N/A");
+		print(tree->current_scope);
 	}
 	| COMMA type variable multiple_func_params {
 		memcpy(funParams[IdxFunRegs],$3.name,strlen($3.name)+1);
 		IdxFunRegs++;
+		append(tree->current_scope, $3.name, PAR, $<ourinfo>2.type, 0, "N/A");
 	};
 
 
@@ -608,13 +660,13 @@ func_call_params
 	: 	/*empty*/  // for functions that have no parameters
 	| 	func_expr  {
 		newRegister();
-		add_quad("mov",p,$1.name," ");
+		add_quad("=",$1.name,"-",p);
 		add_quad("push",p,"","");
 		func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99;
 	}
 	| 	func_expr {	
 		newRegister();
-		add_quad("mov",p,$1.name,"");
+		add_quad("=",$1.name,"-",p);
 		add_quad("push",p,"","");
 		} multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>1.type; func_params_index=99;}
 	;
@@ -622,12 +674,12 @@ func_call_params
 multiple_func_call_params
 	: COMMA func_expr {
 		newRegister();
-		add_quad("mov",p,$2.name,"");
+		add_quad("=",$2.name,"-",p);
 		add_quad("push",p,"","");	
 		func_params[func_params_index--] = $<ourinfo>2.type;
 	}
 	| COMMA func_expr {newRegister();
-		add_quad("mov",p,$2.name,"");
+		add_quad("=",$2.name,"-",p);
 		add_quad("push",p,"","");
 	} multiple_func_call_params {func_params[func_params_index--] = $<ourinfo>2.type;} ;
 
@@ -643,7 +695,7 @@ for_multiple_conditions: | multiple_conditions;
 for_expression_statements: | expression_statements;
 
 for_loop
-	: FOR OPEN_Parentheses for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
+	: FOR OPEN_Parentheses {func_def_flag = 1; create_scope(tree);}  for_var_declaration {newLabel();add_quad(label,"::"," "," ");strcpy(forLabel,label);} 
 	SEMICOLON for_multiple_conditions {
 		  add_quad("cmp",t,"true"," ");
 		  newLabel();
@@ -715,10 +767,9 @@ bit_operations
 	;
 
 booleans
-	: TRUE {strcpy($$.name,$1.name);}
-	| FALSE {strcpy($$.name,$1.name);}
+	: TRUE {strcpy($$.name,$1.name); $$.type=type_bool;}
+	| FALSE {strcpy($$.name,$1.name); $$.type=type_bool;}
 	;
-
 
 
 
@@ -780,7 +831,11 @@ term
 	| term DIV factor {
 		add_quad2("/",$1.name,$3.name,t);
 		strcpy($$.name,t);
-		$$.type = type_float;
+		if($1.type == type_float || $<ourinfo>2.type == type_float){
+			$$.type = type_float;
+		} else{
+			$$.type = type_int;
+		}
 	}
 	| term REM factor{
 		add_quad2("%",$1.name,$3.name,t);
@@ -793,6 +848,7 @@ term
 factor
 	: number {strcpy($$.name,$1.name); $$.type = $1.type;}
 	| variable {
+				strcpy($$.name,$1.name);
 				search_result = search_tree(tree, $1.name);
 				if(search_result == NULL){
 					char *buf = malloc(128);
@@ -800,7 +856,7 @@ factor
 					yyerror(buf);
 					return 1;
 				}
-				else if(strcmp(search_result->attr->value, "N/A") == 0){
+				else if(strcmp(search_result->attr->value, "N/A") == 0 && search_result->attr->kind != PAR ){
 					char *buf = malloc(128);
 					sprintf(buf, "Error : Uninitialized Variable %s\n", $1.name);
 					yyerror(buf);
@@ -808,8 +864,8 @@ factor
 
 				}
 				else {
-					strcpy($$.name,search_result->attr->value);
 					$$.type = search_result->attr->type;
+					printf("%s\n", search_result->attr->name);
 					search_result->attr->no_of_usages++;
 				}
 				}
@@ -824,7 +880,8 @@ factor
 
 extern FILE *yyin;
 extern FILE* yyout;
-extern FILE*yyerr;
+FILE*yyerr;
+FILE* out_main_symbol_table;
 
 //to create new variable 't'
 void newtemp()
@@ -885,7 +942,7 @@ void func_dummy(){
 	for(int i=IdxFunRegs-1;i>=0;i--){
 		newRegister();
 		add_quad("pop",p," "," ");
-		add_quad("mov",funParams[i],p,"");
+		add_quad("=",funParams[i],"-",p);
 	}
 }
 
@@ -903,8 +960,8 @@ void construct_quad(char op[10],char arg1[10],char arg2[10],char res[10]){
 void yyerror(const char *s)
 {
     fprintf(stderr, "line %d: %s\n", yylineno, s);
-	//fprintf(yyout, "line %d: %s\n", yylineno, s);
-	fprintf(stderr,"Found %d error(s)",numError);
+	fprintf(yyerr, "line %d: %s\n", yylineno, s);
+	// fprintf(stderr,"Found %d error(s)",numError);
 
 }
 
@@ -914,20 +971,26 @@ void yyerror(const char *s)
 
 
 
-int main()
+int main(int argc, char* argv[])
 {
-	yyin=fopen("c_files/input2.c","r");
-//	yyin=fopen("expressions.c","r");
+	// yyin=fopen("c_files/input2.c","r");
+	// yyin=fopen("c_files\\test-cases\\expressions.cpp","r");
+	// yyin=fopen("c_files\\quad.c","r");
 
-	yyout=fopen("expressions.txt","w");
-	//yyerr=fopen("Deliverables\\expressionserror.txt","w");
-	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
+	yyin=fopen(argv[1],"r");
+	//free(lineptr);
+
+	yyout=fopen("out_quads.txt","w");
+	yyerr=fopen("out_errors.txt","w");
+	out_main_symbol_table=fopen("out_main_symbol_table.txt","w");
 	
+	fprintf(yyout,"St.No\top\targ1\targ2\tres\n");
+
 	// Initialize Tree with global symbol table
 	tree = malloc(sizeof(struct scope_tree));
 	tree->root = malloc(sizeof(struct symbol_table));
 	tree->current_scope =tree->root;
-	print(tree->current_scope);
+
 
 	// Initialize array that receives function params
 	for( int i = 0; i < 100; i++){
@@ -938,7 +1001,7 @@ int main()
 	int value;
 	value = yyparse();
 
-	struct identifier* curr = tree->root->head;
+	struct identifier* curr = tree->root->first_child->head;
 	while(curr != NULL){
 		if(curr->attr->no_of_usages == 0){
 			char *buf = malloc(128);
@@ -947,19 +1010,27 @@ int main()
 		}
 		curr = curr->next;
 	}
+
 	if(value == 0 && numError==0){
 		printf("Parsing Successful.\n");
 		//display();
 	}
 	else{
 		printf("Parsing Unsuccessful.\n");
-		fprintf(stderr,"Found %d error(s)\n",numError);
+		// fprintf(stderr,"Found %d error(s)\n",numError);
 	}
 
-	//fprintf(yyerr,"Found %d error(s)\n",numError);
-	char* y;
-	scanf("%s", &y);
+	// fprintf(yyerr,"Found %d error(s)\n",numError);
+	if(main_symbol_table != NULL){
+		print_to_file(main_symbol_table, out_main_symbol_table);
+	}
+	else{
+		fprintf(out_main_symbol_table, "No main function defined.");
+	}
+
+	fclose(yyout);
 	fclose(yyin);
+	
 	return 0;
 }
 
@@ -968,7 +1039,9 @@ void add_var_to_current_scope(int const_flag, int type, char* var_name, char* in
 {
 	if (search(tree->current_scope, var_name) != NULL) 
 	{ //Search for variable name only in current scope
-		printf("Error: Re-declaration of existing variable %s\n", var_name); 
+		char *buf = malloc(128);
+		sprintf(buf, " Error : Re-declaration of existing variable %s\n", var_name);
+		yyerror(buf);
 	} 
 	else if (initializing_val_type == -1)
 	{
@@ -980,7 +1053,9 @@ void add_var_to_current_scope(int const_flag, int type, char* var_name, char* in
 	}
 	else
 	{
-		printf("Error: Mismatched initializing value of type %s for variable %s of type %s\n", types[initializing_val_type], var_name, types[type]); 
+		char *buf = malloc(128);
+		sprintf(buf, "Error: Mismatched initializing value of type %s for variable %s of type %s\n", types[initializing_val_type], var_name, types[type]);
+		yyerror(buf);
 	}
-	print(tree->current_scope);
+	// print(tree->current_scope);
 }
